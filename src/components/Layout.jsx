@@ -1,5 +1,4 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
 import {
   Warehouse, MessageSquareMore, BookOpen, Package, Cctv,
@@ -11,8 +10,9 @@ import ApplicationIcon from '../Images/Application.png';
 import FleetIcon from '../Images/Fleet.png';
 import PaymentServicesImg from '../Images/PaymentServices.png';
 import EmployeeImg from '../Images/Employee.png';
+import { useFormContext } from './FormContext';
 
-// Sidebar Component (nested inside Layout.jsx)
+// Sidebar Component
 const Sidebar = () => {
   const menuItems = [
     {
@@ -52,14 +52,14 @@ const Sidebar = () => {
     <>
       <style>{`
         .sidebar {
-          width: 220px;
+          width: 260px;
           min-height: calc(100vh - 60px);
-          background-color: rgba(250, 250, 251, 1);
+          background: linear-gradient(90deg, #FFFFFF 0%, #FAFAFB 100%);
           padding: 9px;
           box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
           position: fixed;
           left: 0;
-          top: 60px; /* Start after the header */
+          top: 59px; /* Start after the header */
           z-index: 1000;
         }
 
@@ -85,18 +85,27 @@ const Sidebar = () => {
           border-radius: 6px;
           font-size: 14px;
           transition: background-color 0.2s, color 0.2s;
+          background: rgba(255, 255, 255, 1);
+          margin-bottom: 5px;
         }
 
         .menu-item:hover {
           background-color: #f2f2f2;
         }
 
-        .menu-item.active { 
-  background: linear-gradient(90deg, #D0D2FF 0%, #FFFFFF 51%);
-  color: #4f46e5;
-  font-weight: 500;
-}
+        .menu-item.active {
+          background: linear-gradient(90deg, #D0D2FF 0%, #FFFFFF 51%);
+          color: #4f46e5;
+          font-weight: 500;
+        }
 
+        .menu-item.active .icon {
+          color: #4f46e5; /* Apply color to SVG icons */
+        }
+
+        .menu-item.active .icon img {
+          filter: invert(32%) sepia(96%) saturate(398%) hue-rotate(210deg) brightness(94%) contrast(94%); /* Approximates #4f46e5 */
+        }
 
         .icon {
           display: flex;
@@ -104,19 +113,33 @@ const Sidebar = () => {
           justify-content: center;
         }
 
+        /* Synchronize sidebar width with main-content margin */
+        @media (max-width: 1440px) {
+          .sidebar {
+            width: 220px;
+          }
+        }
+
         @media (max-width: 1024px) {
           .sidebar {
-            width: 200px; /* Reduce sidebar width for smaller screens */
+            width: 180px;
           }
         }
 
         @media (max-width: 768px) {
           .sidebar {
-            width: 150px; /* Further reduce for very small screens */
+            width: 120px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .sidebar {
+            width: 100%; /* Full width on very small screens */
+            position: static; /* Remove fixed positioning */
+            min-height: auto;
           }
         }
       `}</style>
-
       <div className="sidebar">
         <h2 className="sidebar-title">Modules</h2>
         <ul className="menu-list">
@@ -141,49 +164,72 @@ const Sidebar = () => {
 
 // Layout Component
 const Layout = ({ children }) => {
+  const { isFormOpen } = useFormContext();
+
   return (
     <>
       <style>{`
-        .layout {
+       .layout {
           display: flex;
           flex-direction: column;
           min-height: 100vh;
-          background-color: rgb(240, 240, 240);
-          width: 100vw; /* Ensure layout fits viewport width */
-          overflow-x: hidden; /* Prevent horizontal scrolling */
-        }
+          background: ${
+            isFormOpen
+              ? 'rgb(0, 0, 0)'
+              : 'radial-gradient(rgba(255,255, 255,0), rgba(247,249,250,1) )'
+          };
+          width: 100%;
+          overflow-x: hidden; /* Prevent horizontal overflow */
+        }     
+          
+
 
         .main-content {
           display: flex;
           flex: 1;
-          margin-top: 80px; /* Space for fixed header */
-          margin-left: 280px; /* Match sidebar width */
-          background-color: rgb(240, 240, 240);
-          width: calc(100% - 260px); /* Ensure main content fits remaining space */
+          margin-top: 80px;
+          margin-left: 300px; /* Match sidebar width */
+          background: transparent; /* Let .layout background show through */
+          width: calc(100% - 260px); /* Consistent with margin-left */
           box-sizing: border-box;
-          min-width: 0; /* Prevent overflow */
+          min-width: 0;
+        }
+
+        /* Adjusted breakpoints for better responsiveness */
+        @media (max-width: 1440px) {
+          .main-content {
+            margin-left: 260px;
+            width: calc(100% - 220px);
+          }
         }
 
         @media (max-width: 1024px) {
           .main-content {
-            margin-left: 200px; /* Match reduced sidebar width */
-            width: calc(100% - 200px);
+            margin-left: 180px;
+            width: calc(100% - 180px);
           }
         }
 
         @media (max-width: 768px) {
           .main-content {
-            margin-left: 150px; /* Match reduced sidebar width */
-            width: calc(100% - 150px);
+            margin-left: 120px;
+            width: calc(100% - 120px);
+          }
+        }
+
+        @media (max-width: 480px) {
+          .main-content {
+            margin-left: 0;
+            width: 100%;
+            margin-top: 60px; /* Adjust for smaller header */
           }
         }
       `}</style>
-
       <div className="layout">
         <Header />
         <div className="main-content">
           <Sidebar />
-          {children || <Outlet />}
+          {children}
         </div>
       </div>
     </>

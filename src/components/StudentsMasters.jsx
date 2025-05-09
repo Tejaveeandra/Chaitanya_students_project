@@ -105,7 +105,7 @@ const StudentsMasters = () => {
           flex: 2;
           display: flex;
           flex-wrap: wrap;
-          gap: 12px 10px;
+          gap: 12px 8px;
           min-width: 200px;
         }
 
@@ -125,7 +125,9 @@ const StudentsMasters = () => {
           position: relative;
           width: 100%;
           max-width: 300px;
+     
         }
+    
 
         .search-icon {
           position: absolute;
@@ -144,6 +146,9 @@ const StudentsMasters = () => {
           border-radius: 20px;
           font-size: 14px;
         }
+          .search-bar::placeholder {
+  color: rgba(0, 0, 0, 0.25);
+}
 
         .filter-button {
           display: inline-flex;
