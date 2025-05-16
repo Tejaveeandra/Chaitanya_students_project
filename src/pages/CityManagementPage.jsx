@@ -1055,6 +1055,7 @@ const CityManagementPage = () => {
           @media (max-width: 1440px) {
   .table-inner {
     min-width: 600px; /* Reduce min-width to fit better */
+   
   }
 }
 

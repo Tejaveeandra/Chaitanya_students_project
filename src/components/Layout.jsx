@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  Warehouse, MessageSquareMore, BookOpen, Package, Cctv,
+  Warehouse, MessageSquareMore, BookOpen, Package, Cctv, ChevronUp, ChevronDown 
 } from 'lucide-react';
 import Header from './Header';
 import { HiOutlineUserGroup } from "react-icons/hi";
@@ -14,6 +14,10 @@ import { useFormContext } from './FormContext';
 
 // Sidebar Component
 const Sidebar = () => {
+  const [isExpanded, setIsExpanded] = useState(false); // State to track expanded/collapsed state
+  const touchStartY = useRef(null); // Track touch start position
+  const sidebarRef = useRef(null); // Reference to sidebar for drag handling
+
   const menuItems = [
     {
       name: 'Students',
@@ -48,6 +52,36 @@ const Sidebar = () => {
     { name: 'HRMS', icon: <HiOutlineUserGroup size={18} />, path: '/hrms' }
   ];
 
+  // Handle touch start for drag
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+    console.log('Touch start:', touchStartY.current); // Debug touch start
+  };
+
+  // Handle touch move for drag
+  const handleTouchMove = (e) => {
+    if (touchStartY.current === null) return;
+    e.preventDefault(); // Prevent scrolling during drag
+    const touchCurrentY = e.touches[0].clientY;
+    const deltaY = touchStartY.current - touchCurrentY;
+    console.log('Touch move, deltaY:', deltaY); // Debug touch movement
+
+    // Detect swipe direction
+    if (deltaY > 30 && !isExpanded) { // Expand only if not already expanded
+      setIsExpanded(true);
+      console.log('Expanded: true');
+    } else if (deltaY < -30 && isExpanded) { // Collapse only if expanded
+      setIsExpanded(false);
+      console.log('Expanded: false');
+    }
+  };
+
+  // Handle touch end
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
+    console.log('Touch end'); // Debug touch end
+  };
+
   return (
     <>
       <style>{`
@@ -61,6 +95,7 @@ const Sidebar = () => {
           left: 0;
           top: 59px; /* Start after the header */
           z-index: 1000;
+          transition: transform 0.3s ease-in-out, height 0.3s ease-in-out; /* Smooth transition */
         }
 
         .sidebar-title {
@@ -73,6 +108,8 @@ const Sidebar = () => {
           list-style: none;
           padding: 0;
           margin: 0;
+          display: flex;
+          flex-direction: column; /* Vertical for sidebar */
         }
 
         .menu-item {
@@ -113,6 +150,11 @@ const Sidebar = () => {
           justify-content: center;
         }
 
+        /* Drag message styles */
+        .drag-message {
+          display: none; /* Hidden by default */
+        }
+
         /* Synchronize sidebar width with main-content margin */
         @media (max-width: 1440px) {
           .sidebar {
@@ -122,25 +164,149 @@ const Sidebar = () => {
 
         @media (max-width: 1024px) {
           .sidebar {
-            width: 180px;
+            width: 200px;
           }
         }
 
         @media (max-width: 768px) {
           .sidebar {
-            width: 120px;
+            width: 200px;
           }
         }
 
         @media (max-width: 480px) {
           .sidebar {
-            width: 100%; /* Full width on very small screens */
-            position: static; /* Remove fixed positioning */
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            top: auto; /* Remove top positioning */
             min-height: auto;
+            height: ${isExpanded ? '185px' : '80px'}; /* Expanded: 3 rows, collapsed: 1 row */
+            background: #fff;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+            padding: 5px;
+            transform: ${isExpanded ? 'translateY(0)' : 'translateY(calc(100% - 80px))'}; /* Slide up/down */
+            z-index: 1001; /* Above other content */
+            transition: height 0.3s ease-in-out, transform 0.3s ease-in-out; /* Smooth transitions */
+            background: #FFFFFF;
+          }
+
+          .sidebar-title {
+            display: none; /* Hide title on mobile */
+          }
+
+          .menu-list {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 columns */
+            grid-template-rows: ${isExpanded ? 'repeat(3, 55px)' : '60px'}; /* 3 rows when expanded, 1 when collapsed */
+            gap: 5px; /* Space between grid items */
+            
+            height: 100%;
+            overflow: hidden; /* Prevent scrolling in collapsed state */
+            align-content: start; /* Align items to top */
+            margin-top: 20px; /* Reserve space for drag message */
+          }
+
+          .menu-item {
+            display: flex;
+            flex-direction: column; /* Stack icon and text vertically */
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            margin: 0;
+            font-size: 11px; /* Compact layout */
+            text-align: center;
+            
+            min-width: 0; /* Fit grid cells */
+            background: transparent; /* Ensure no default background */
+            border-radius: 6px; /* Match desktop styling */
+          }
+
+          .menu-item:hover {
+            background: #f2f2f2 !important; /* Hover effect */
+          }
+
+          /* Reset desktop active styles for mobile */
+          .menu-item.active {
+            background: none; /* Remove desktop gradient */
+          }
+
+          .sidebar .menu-item.active {
+            background: #3425FF !important; /* Solid blue background for active item */
+            color: #FFFFFF !important; /* White text for contrast */
+            font-weight: 500;
+          }
+
+          .sidebar .menu-item.active .icon {
+            color: #FFFFFF !important; /* Ensure SVG icons are white */
+          }
+
+          .sidebar .menu-item.active .icon img {
+            filter: brightness(0) invert(1) !important; /* Make image icons white */
+          }
+
+          /* Ensure first 5 items (first row) follow the same active styling */
+          .menu-item:nth-child(-n+5).active {
+            background:rgb(38, 23, 253) !important; /* Ensure first row has blue background */
+            //color: #FFFFFF !important;
+          }
+
+          .menu-item:nth-child(-n+5).active .icon img {
+            filter: brightness(0) invert(1) !important; /* Ensure first row image icons are white */
+          }
+
+          /* Hide items beyond the first 5 when collapsed */
+          .menu-item:nth-child(n+6) {
+            display: ${isExpanded ? 'flex' : 'none'};
+          }
+
+          /* Ensure first 5 items are always visible */
+          .menu-item:nth-child(-n+5) {
+            display: flex;
+          }
+
+          /* Center the 11th item in the third row */
+          .menu-item:nth-child(11) {
+            grid-column: 3; /* Center in third column */
+          }
+
+          /* Show drag message only in mobile view */
+          .drag-message {
+            display: flex; /* Visible in mobile view */
+            justify-content: center;
+            position: absolute;
+            top: 5px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 0;
+            z-index: 1002; /* Above menu items */
+            transition: opacity 0.3s ease-in-out;
+            height:10px;
           }
         }
       `}</style>
-      <div className="sidebar">
+      <div
+        className="sidebar"
+        ref={sidebarRef}
+        style={{ touchAction: 'none' }} /* Prevent default touch actions */
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Drag messages */}
+        <div className="drag-message" style={{ opacity: isExpanded ? 0 : 1 }}>
+        <ChevronUp size={20} />
+
+          Drag up to see full menu
+        </div>
+        <div className="drag-message" style={{ opacity: isExpanded ? 1 : 0 }}>
+          <ChevronDown size={20} />
+          Drag down to see full menu
+        </div>
         <h2 className="sidebar-title">Modules</h2>
         <ul className="menu-list">
           {menuItems.map((item) => (
@@ -150,6 +316,7 @@ const Sidebar = () => {
                 className={({ isActive }) =>
                   `menu-item ${isActive ? 'active' : ''}`
                 }
+                aria-label={`Navigate to ${item.name}`}
               >
                 <span className="icon">{item.icon}</span>
                 <span>{item.name}</span>
@@ -169,7 +336,7 @@ const Layout = ({ children }) => {
   return (
     <>
       <style>{`
-       .layout {
+        .layout {
           display: flex;
           flex-direction: column;
           min-height: 100vh;
@@ -180,9 +347,7 @@ const Layout = ({ children }) => {
           };
           width: 100%;
           overflow-x: hidden; /* Prevent horizontal overflow */
-        }     
-          
-
+        }
 
         .main-content {
           display: flex;
@@ -198,21 +363,21 @@ const Layout = ({ children }) => {
         /* Adjusted breakpoints for better responsiveness */
         @media (max-width: 1440px) {
           .main-content {
-            margin-left: 260px;
+            margin-left: 250px;
             width: calc(100% - 220px);
           }
         }
 
         @media (max-width: 1024px) {
           .main-content {
-            margin-left: 180px;
+            margin-left: 210px;
             width: calc(100% - 180px);
           }
         }
 
         @media (max-width: 768px) {
           .main-content {
-            margin-left: 120px;
+            margin-left: 210px;
             width: calc(100% - 120px);
           }
         }
@@ -222,6 +387,8 @@ const Layout = ({ children }) => {
             margin-left: 0;
             width: 100%;
             margin-top: 60px; /* Adjust for smaller header */
+            
+            margin-bottom: 60px; /* Reserve space for bottom bar */
           }
         }
       `}</style>

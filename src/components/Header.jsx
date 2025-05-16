@@ -1,274 +1,283 @@
 import React, { useState } from 'react';
-import { Bell, Search as SearchIcon, ChevronDown } from 'lucide-react'; // Importing icons from lucide-react library
-import styled from 'styled-components'; // Importing styled-components for CSS-in-JS styling
-import Ellipse6 from '../Images/Ellipse6.png'; // Importing user profile image
-import logo from '../Images/SriChaitanyalogo.png'; // Importing logo image
+import { Bell, Search as SearchIcon, ChevronDown, Menu } from 'lucide-react';
+import styled from 'styled-components';
+import Ellipse6 from '../Images/Ellipse6.png';
+import logo from '../Images/SriChaitanyalogo.png';
 
 // Styled components for the header layout and elements
 const HeaderContainer = styled.div`
-  display: flex; /* Flexbox layout for header */
-  align-items: center; /* Vertically center items */
-  justify-content: space-between; /* Space out children (LeftSection and UserProfile) */
-  padding: 9px 16px; /* Padding for header */
-  background-color: white; /* White background */
-  border-bottom: 1px solid #e2e8f0; /* Bottom border for visual separation */
-  position: fixed; /* Fix header to top of the page */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  background-color: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  width: 100%; /* Full width */
-  z-index: 1000; /* Ensure header stays above other content */
+  width: 100%;
+  z-index: 1000;
 
   @media (max-width: 768px) {
-    padding: 13px; /* Increase padding for tablet view */
+    padding: 13px;
   }
 
   @media (max-width: 480px) {
-    padding: 10px; /* Reduce padding for mobile view */
-    flex-wrap: nowrap; /* Prevent wrapping to keep elements in one line */
+    padding: 16px;
+    flex-wrap: nowrap;
+    background: #F6F8F9;
+
   }
 `;
 
 const LeftSection = styled.div`
-  display: flex; /* Flexbox layout for logo and search elements */
-  align-items: center; /* Vertically center items */
-  gap: 20px; /* Space between logo and search elements */
-  flex: 1; /* Take up remaining space */
-  min-width: 0; /* Allow shrinking if needed */
+  display: flex;
+  align-items: center;
+  gap: 80px;
+  flex: 1;
+  min-width: 0;
 
   @media (max-width: 768px) {
-    gap: 10px; /* Reduce gap for tablet view */
-    flex-wrap: nowrap; /* Prevent wrapping */
+    gap: 10px;
+    flex-wrap: nowrap;
   }
 
   @media (max-width: 480px) {
-    gap:20px; /* Further reduce gap for mobile */
-    flex: 0 1 auto; /* Allow shrinking to fit in one line */
+    gap: 10px;
+    flex: 0 1 auto;
   }
 `;
 
 const LogoContainer = styled.div`
-  display: flex; /* Flexbox layout for logo */
-  align-items: center; /* Vertically center logo */
-  gap: 8px; /* Space between logo image and other elements (if any) */
-  margin-right: 20px; /* Space between logo and search elements */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 20px;
 
   @media (max-width: 768px) {
-    margin-right: 10px; /* Reduce margin for tablet */
+    margin-right: 10px;
   }
 
   @media (max-width: 480px) {
-    margin-right: 5px; /* Further reduce margin for mobile */
+    margin-right: 5px;
   }
 `;
 
 const LogoImage = styled.img`
-  width: 150px; /* Logo width for desktop */
-  height: 40px; /* Logo height for desktop */
+  width: 150px;
+  height: 40px;
 
   @media (max-width: 768px) {
-    width: 120px; /* Reduce logo size for tablet */
+    width: 120px;
     height: 32px;
   }
 
   @media (max-width: 480px) {
-    width: 80px; /* Further reduce logo size for mobile */
-    height: 24px;
+    width: 112px;
+    height: 26px;
   }
 `;
 
 const SearchContainer = styled.div`
-  flex: 1; /* Take up remaining space in LeftSection */
-  max-width: 500px; /* Max width for search bar on desktop */
-  margin: 0 8px; /* Horizontal margin */
-  display: flex; /* Flexbox layout for search icon and input */
-  align-items: center; /* Vertically center items */
-  position: relative; /* For absolute positioning of SearchIconStyled */
+  flex: 1;
+  max-width: 500px;
+  margin: 0 8px;
+  display: flex;
+  align-items: center;
+  position: relative;
 
   @media (max-width: 768px) {
-    max-width: 60%; /* Reduce max width for tablet */
-    margin: 0 4px; /* Reduce margin for tablet */
+    max-width: 60%;
+    margin: 0 4px;
   }
 
   @media (max-width: 480px) {
-    display: flex; /* Ensure flex layout */
-    flex: 1; /* Take up available space */
-    max-width: ${props => (props.isOpen ? '60%' : '0')}; /* Expand when open, collapse when closed */
-    margin: 0; /* Remove margin to fit in header */
-    overflow: hidden; /* Hide overflow when collapsed */
-    transform: ${props => (props.isOpen ? 'translateX(0)' : 'translateX(-100%)')}; /* Slide in from left */
-    transition: transform 0.3s ease-in-out, max-width 0.3s ease-in-out; /* Smooth animation for sliding and width */
+    flex: 1;
+    max-width: ${props => (props.isOpen ? '60%' : '0')};
+    margin: 0;
+    overflow: hidden;
+    transform: ${props => (props.isOpen ? 'translateX(0)' : 'translateX(-100%)')};
+    transition: transform 0.3s ease-in-out, max-width 0.3s ease-in-out;
   }
 `;
 
 const SearchIconStyled = styled(SearchIcon)`
-  position: absolute; /* Position inside SearchContainer */
-  left: 12px; /* Position from the left */
-  color: #A1A5B0; /* Icon color */
-  pointer-events: none; /* Prevent interaction with the icon */
+  position: absolute;
+  left: 12px;
+  color: #A1A5B0;
+  pointer-events: none;
 
   @media (max-width: 768px) {
-    left: 8px; /* Adjust position for tablet */
+    left: 8px;
+  }
+
+  @media (max-width: 480px) {
+    display: ${props => (props.isOpen ? 'block' : 'none')};
   }
 `;
 
 const SearchIconToggle = styled(SearchIcon)`
-  display: none; /* Hidden on desktop and tablet */
-  color: #A1A5B0; /* Icon color */
-  cursor: pointer; /* Indicate clickable */
+  display: none;
+  color: #A1A5B0;
+  cursor: pointer;
 
   @media (max-width: 480px) {
-    display: block; /* Show on mobile */
-   
+    // display: block;
+      oveflow:hidden;
   }
 `;
 
 const SearchBar = styled.input`
-  width: 100%; /* Full width of SearchContainer */
-  padding: 8px 12px 8px 38px; /* Padding with space for icon on the left */
-  border: 1px solid #e2e8f0; /* Border for input */
-  background: #FFFFFF; /* White background */
-  border-radius: 26px; /* Rounded corners */
-  font-size: 14px; /* Font size for desktop */
-  box-shadow: 0px 0px 0px 3px #F5F6F7; /* Subtle shadow */
+  width: 100%;
+  padding: 8px 12px 8px 38px;
+  border: 1px solid #e2e8f0;
+  background: #FFFFFF;
+  border-radius: 26px;
+  font-size: 14px;
+  box-shadow: 0px 0px 0px 3px #F5F6F7;
 
   &::placeholder {
-    color: rgba(0, 0, 0, 0.25); /* Placeholder text color */
+    color: rgba(0, 0, 0, 0.25);
   }
 
   @media (max-width: 768px) {
-    padding: 6px 10px 6px 30px; /* Adjust padding for tablet */
-    font-size: 12px; /* Smaller font size for tablet */
+    padding: 6px 10px 6px 30px;
+    font-size: 12px;
   }
 
   @media (max-width: 480px) {
-    display: ${props => (props.isOpen ? 'block' : 'none')}; /* Show/hide based on toggle state */
+    display: ${props => (props.isOpen ? 'block' : 'none')};
   }
 `;
 
 const UserProfile = styled.div`
-  display: flex; /* Flexbox layout for user profile elements */
-  align-items: center; /* Vertically center items */
-  gap: 15px; /* Space between elements */
-  min-width: 0; /* Allow shrinking */
-  margin-right: 20px; /* Space from the right edge */
-  position: relative; /* For absolute positioning of Dropdown */
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+  margin-right: 20px;
+  position: relative;
 
   @media (max-width: 768px) {
-    gap: 8px; /* Reduce gap for tablet */
-    margin-right: 10px; /* Reduce margin for tablet */
-    flex-wrap: nowrap; /* Prevent wrapping */
+    gap: 8px;
+    margin-right: 10px;
+    flex-wrap: nowrap;
   }
 
   @media (max-width: 480px) {
-    gap: 6px; /* Further reduce gap for mobile */
-    margin-right: 5px; /* Reduce margin for mobile */
-    flex: 0 1 auto; /* Allow shrinking to fit in one line */
+    display: none; /* Completely hide on small screens */
   }
 `;
 
 const NotificationIcon = styled(Bell)`
-  color: #666; /* Icon color */
+  color: #666;
 `;
 
 const UserInfo = styled.div`
-  display: flex; /* Flexbox layout for user info */
-  flex-direction: column; /* Stack user ID and role vertically */
-  align-items: flex-start; /* Align text to the left */
-
-  @media (max-width: 480px) {
-    display: none; /* Hide on mobile, shown in dropdown */
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 `;
 
 const UserId = styled.span`
-  font-size: 14px; /* Font size for desktop */
-  font-weight: 500; /* Medium weight */
-  color: #333; /* Text color */
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
 
   @media (max-width: 768px) {
-    font-size: 12px; /* Smaller font for tablet */
+    font-size: 12px;
   }
 `;
 
 const UserRole = styled.span`
-  font-size: 12px; /* Font size for desktop */
-  color: #666; /* Text color */
+  font-size: 12px;
+  color: #666;
 
   @media (max-width: 768px) {
-    font-size: 10px; /* Smaller font for tablet */
+    font-size: 10px;
   }
 `;
 
 const Dropdown = styled.div`
-  display: none; /* Hidden on desktop and tablet */
+  display: none;
 
   @media (max-width: 480px) {
-    display: ${props => (props.isOpen ? 'block' : 'none')}; /* Show/hide based on toggle state */
-    position: absolute; /* Position below profile icon */
-    top: 40px; /* Distance from top of header */
-    right: 0; /* Align to the right */
-    background-color: white; /* White background */
-    border: 1px solid #e2e8f0; /* Border for dropdown */
-    border-radius: 8px; /* Rounded corners */
-    padding: 10px; /* Padding inside dropdown */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-    z-index: 1001; /* Ensure dropdown is above other content */
-    min-width: 150px; /* Minimum width for dropdown */
+    display: ${props => (props.isOpen ? 'block' : 'none')};
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    min-width: 150px;
   }
 
   @media (max-width: 425px) {
-    min-width: 140px; /* Adjust for large mobile */
-    top: 38px; /* Adjust position */
+    min-width: 140px;
+    top: 38px;
   }
 
   @media (max-width: 375px) {
-    min-width: 130px; /* Adjust for medium mobile */
-    top: 36px; /* Adjust position */
+    min-width: 130px;
+    top: 36px;
   }
 
   @media (max-width: 320px) {
-    min-width: 120px; /* Adjust for small mobile */
-    top: 34px; /* Adjust position */
+    min-width: 120px;
+    top: 34px;
   }
 `;
 
 const DropdownUserInfo = styled.div`
-  display: flex; /* Flexbox layout for dropdown user info */
-  flex-direction: column; /* Stack user ID and role vertically */
-  align-items: flex-start; /* Align text to the left */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 `;
 
 const DropdownUserId = styled.span`
-  font-size: 12px; /* Font size for dropdown user ID */
-  font-weight: 500; /* Medium weight */
-  color: #333; /* Text color */
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
 `;
 
 const DropdownUserRole = styled.span`
-  font-size: 10px; /* Font size for dropdown user role */
-  color: #666; /* Text color */
+  font-size: 10px;
+  color: #666;
 `;
 
 const ProfileIconContainer = styled.div`
-  display: flex; /* Flexbox layout for profile icon and chevron */
-  align-items: center; /* Vertically center items */
-  gap: 8px; /* Space between profile image and chevron */
-  cursor: pointer; /* Indicate clickable */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
 `;
 
+const MenuIcon = styled(Menu)`
+  display: none;
+  color: #666;
+  cursor: pointer;
+
+  @media (max-width: 480px) {
+    display: block;
+    position: absolute;
+    right: 38px; /* Adjust this as needed */
+    top: 16px;
+  }
+`;
+
+
 const Header = () => {
-  // State to manage user profile dropdown visibility on mobile
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // State to manage search bar visibility on mobile
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Function to toggle user profile dropdown
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  // Function to toggle search bar visibility
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
   };
@@ -276,34 +285,27 @@ const Header = () => {
   return (
     <HeaderContainer>
       <LeftSection>
-        {/* Logo section */}
         <LogoContainer>
           <LogoImage src={logo} alt="Sri Chaitanya Logo" />
         </LogoContainer>
-
-        {/* Search icon toggle for mobile */}
-        <SearchIconToggle size={18} isOpen={isSearchOpen} onClick={toggleSearch} />
-        {/* Search bar container, toggles on mobile */}
+        <SearchIconToggle size={18} onClick={toggleSearch} />
         <SearchContainer isOpen={isSearchOpen}>
-          <SearchIconStyled size={18} />
+          <SearchIconStyled size={18} isOpen={isSearchOpen} />
           <SearchBar type="text" placeholder="Ask for anything" isOpen={isSearchOpen} />
         </SearchContainer>
       </LeftSection>
 
       <UserProfile>
-        {/* Notification icon */}
         <NotificationIcon size={18} />
-        {/* Profile icon and dropdown toggle */}
         <ProfileIconContainer onClick={toggleDropdown}>
           <img src={Ellipse6} alt="User Profile" width="32" height="32" />
-          <ChevronDown size={18} color="#666" />
+         
         </ProfileIconContainer>
-        {/* User info for desktop and tablet */}
         <UserInfo>
           <UserId>HYD 256789</UserId>
           <UserRole>Cashier</UserRole>
         </UserInfo>
-        {/* Dropdown for user info on mobile */}
+         <ChevronDown size={18} color="#666" />
         <Dropdown isOpen={isDropdownOpen}>
           <DropdownUserInfo>
             <DropdownUserId>HYD 256789</DropdownUserId>
@@ -311,6 +313,8 @@ const Header = () => {
           </DropdownUserInfo>
         </Dropdown>
       </UserProfile>
+
+      <MenuIcon size={18} />
     </HeaderContainer>
   );
 };
