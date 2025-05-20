@@ -1,22 +1,28 @@
-import React, { useState, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
+
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Warehouse, MessageSquareMore, BookOpen, Package, Cctv, ChevronUp, ChevronDown 
 } from 'lucide-react';
-import Header from './Header';
 import { HiOutlineUserGroup } from "react-icons/hi";
+import Header from './Header';
 import StudentsIcon from '../Images/Students.png';
 import ApplicationIcon from '../Images/Application.png';
 import FleetIcon from '../Images/Fleet.png';
 import PaymentServicesImg from '../Images/PaymentServices.png';
 import EmployeeImg from '../Images/Employee.png';
 import { useFormContext } from './FormContext';
+import { NavLink } from 'react-router-dom';
+import { useRef } from 'react';
 
 // Sidebar Component
-const Sidebar = () => {
-  const [isExpanded, setIsExpanded] = useState(false); // State to track expanded/collapsed state
-  const touchStartY = useRef(null); // Track touch start position
-  const sidebarRef = useRef(null); // Reference to sidebar for drag handling
+const Sidebar = ({ tableScrollTop }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const touchStartY = useRef(null);
+  const sidebarRef = useRef(null);
+  const lastScrollY = useRef(0);
+  const { isFormOpen, isCityTableVisible } = useFormContext();
 
   const menuItems = [
     {
@@ -52,50 +58,68 @@ const Sidebar = () => {
     { name: 'HRMS', icon: <HiOutlineUserGroup size={18} />, path: '/hrms' }
   ];
 
-  // Handle touch start for drag
   const handleTouchStart = (e) => {
     touchStartY.current = e.touches[0].clientY;
-    console.log('Touch start:', touchStartY.current); // Debug touch start
+    console.log('Touch start:', touchStartY.current);
   };
 
-  // Handle touch move for drag
   const handleTouchMove = (e) => {
     if (touchStartY.current === null) return;
-    e.preventDefault(); // Prevent scrolling during drag
+    e.preventDefault();
     const touchCurrentY = e.touches[0].clientY;
     const deltaY = touchStartY.current - touchCurrentY;
-    console.log('Touch move, deltaY:', deltaY); // Debug touch movement
+    console.log('Touch move, deltaY:', deltaY);
 
-    // Detect swipe direction
-    if (deltaY > 30 && !isExpanded) { // Expand only if not already expanded
+    if (deltaY > 30 && !isExpanded) {
       setIsExpanded(true);
       console.log('Expanded: true');
-    } else if (deltaY < -30 && isExpanded) { // Collapse only if expanded
+    } else if (deltaY < -30 && isExpanded) {
       setIsExpanded(false);
       console.log('Expanded: false');
     }
   };
 
-  // Handle touch end
   const handleTouchEnd = () => {
     touchStartY.current = null;
-    console.log('Touch end'); // Debug touch end
+    console.log('Touch end');
   };
 
+ useEffect(() => {
+    if (window.innerWidth <= 480 && isCityTableVisible && !isFormOpen) {
+      const currentScrollY = tableScrollTop || 0;
+      const scrollingUp = currentScrollY > lastScrollY.current;
+      const atTop = currentScrollY === 0;
+
+      console.log('Sidebar - Table Scroll:', currentScrollY, 'Scrolling Up:', scrollingUp, 'At Top:', atTop, 'isVisible:', isVisible);
+
+      if (atTop) {
+        setIsVisible(true);
+      } else if (scrollingUp) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    } else {
+      setIsVisible(true);
+    }
+  }, [tableScrollTop, isCityTableVisible, isFormOpen]);
+  
   return (
     <>
       <style>{`
         .sidebar {
-          width: 260px;
+          width: 240px;
           min-height: calc(100vh - 60px);
           background: linear-gradient(90deg, #FFFFFF 0%, #FAFAFB 100%);
           padding: 9px;
           box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
           position: fixed;
           left: 0;
-          top: 59px; /* Start after the header */
+          top: 59px;
           z-index: 1000;
-          transition: transform 0.3s ease-in-out, height 0.3s ease-in-out; /* Smooth transition */
+          transition: transform 0.3s ease-in-out, height 0.3s ease-in-out;
         }
 
         .sidebar-title {
@@ -109,7 +133,7 @@ const Sidebar = () => {
           padding: 0;
           margin: 0;
           display: flex;
-          flex-direction: column; /* Vertical for sidebar */
+          flex-direction: column;
         }
 
         .menu-item {
@@ -137,11 +161,11 @@ const Sidebar = () => {
         }
 
         .menu-item.active .icon {
-          color: #4f46e5; /* Apply color to SVG icons */
+          color: #4f46e5;
         }
 
         .menu-item.active .icon img {
-          filter: invert(32%) sepia(96%) saturate(398%) hue-rotate(210deg) brightness(94%) contrast(94%); /* Approximates #4f46e5 */
+          filter: invert(32%) sepia(96%) saturate(398%) hue-rotate(210deg) brightness(94%) contrast(94%);
         }
 
         .icon {
@@ -150,27 +174,37 @@ const Sidebar = () => {
           justify-content: center;
         }
 
-        /* Drag message styles */
         .drag-message {
-          display: none; /* Hidden by default */
+          display: none;
         }
 
-        /* Synchronize sidebar width with main-content margin */
         @media (max-width: 1440px) {
           .sidebar {
-            width: 220px;
+            width: 200px;
+          }
+        }
+
+        @media (max-width: 1366px) {
+          .sidebar {
+            width: 180px;
+          }
+        }
+
+        @media (max-width: 1280px) {
+          .sidebar {
+            width: 160px;
           }
         }
 
         @media (max-width: 1024px) {
           .sidebar {
-            width: 200px;
+            width: 155px;
           }
         }
 
         @media (max-width: 768px) {
           .sidebar {
-            width: 200px;
+            width: 155px;
           }
         }
 
@@ -179,100 +213,95 @@ const Sidebar = () => {
             width: 100%;
             position: fixed;
             bottom: 0;
-            top: auto; /* Remove top positioning */
+            top: auto;
             min-height: auto;
-            height: ${isExpanded ? '185px' : '80px'}; /* Expanded: 3 rows, collapsed: 1 row */
+            height: ${isExpanded ? '185px' : '80px'};
             background: #fff;
             box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
             padding: 5px;
-            transform: ${isExpanded ? 'translateY(0)' : 'translateY(calc(100% - 80px))'}; /* Slide up/down */
-            z-index: 1001; /* Above other content */
-            transition: height 0.3s ease-in-out, transform 0.3s ease-in-out; /* Smooth transitions */
+            transform: ${
+              isFormOpen
+                ? 'translateY(100%)'
+                : !isVisible
+                ? 'translateY(100%)'
+                : isExpanded
+                ? 'translateY(0)'
+                : 'translateY(calc(100% - 80px))'
+            };
+            z-index: 1001;
+            transition: transform 0.3s ease-in-out, height 0.3s ease-in-out;
             background: #FFFFFF;
           }
 
           .sidebar-title {
-            display: none; /* Hide title on mobile */
+            display: none;
           }
 
           .menu-list {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5 columns */
-            grid-template-rows: ${isExpanded ? 'repeat(3, 55px)' : '60px'}; /* 3 rows when expanded, 1 when collapsed */
-            gap: 5px; /* Space between grid items */
-            
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: ${isExpanded ? 'repeat(3, 55px)' : '60px'};
+            gap: 5px;
             height: 100%;
-            overflow: hidden; /* Prevent scrolling in collapsed state */
-            align-content: start; /* Align items to top */
-            margin-top: 20px; /* Reserve space for drag message */
+            overflow: hidden;
+            align-content: start;
+            margin-top: 20px;
           }
 
           .menu-item {
             display: flex;
-            flex-direction: column; /* Stack icon and text vertically */
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 5px;
+            padding: 3px;
             margin: 0;
-            font-size: 11px; /* Compact layout */
+            font-size: 11px;
             text-align: center;
-            
-            min-width: 0; /* Fit grid cells */
-            background: transparent; /* Ensure no default background */
-            border-radius: 6px; /* Match desktop styling */
+            min-width: 0;
+            background: transparent;
+            border-radius: 6px;
           }
 
           .menu-item:hover {
-            background: #f2f2f2 !important; /* Hover effect */
-          }
-
-          /* Reset desktop active styles for mobile */
-          .menu-item.active {
-            background: none; /* Remove desktop gradient */
+            background: #f2f2f2 !important;
           }
 
           .sidebar .menu-item.active {
-            background: #3425FF !important; /* Solid blue background for active item */
-            color: #FFFFFF !important; /* White text for contrast */
+            background: #3425FF !important;
+            color: #FFFFFF !important;
             font-weight: 500;
           }
 
           .sidebar .menu-item.active .icon {
-            color: #FFFFFF !important; /* Ensure SVG icons are white */
+            color: #FFFFFF !important;
           }
 
           .sidebar .menu-item.active .icon img {
-            filter: brightness(0) invert(1) !important; /* Make image icons white */
+            filter: brightness(0) invert(1) !important;
           }
 
-          /* Ensure first 5 items (first row) follow the same active styling */
           .menu-item:nth-child(-n+5).active {
-            background:rgb(38, 23, 253) !important; /* Ensure first row has blue background */
-            //color: #FFFFFF !important;
+            background: #2617FD !important;
           }
 
           .menu-item:nth-child(-n+5).active .icon img {
-            filter: brightness(0) invert(1) !important; /* Ensure first row image icons are white */
+            filter: brightness(0) invert(1) !important;
           }
 
-          /* Hide items beyond the first 5 when collapsed */
           .menu-item:nth-child(n+6) {
             display: ${isExpanded ? 'flex' : 'none'};
           }
 
-          /* Ensure first 5 items are always visible */
           .menu-item:nth-child(-n+5) {
             display: flex;
           }
 
-          /* Center the 11th item in the third row */
           .menu-item:nth-child(11) {
-            grid-column: 3; /* Center in third column */
+            grid-column: 3;
           }
 
-          /* Show drag message only in mobile view */
           .drag-message {
-            display: flex; /* Visible in mobile view */
+            display: flex;
             justify-content: center;
             position: absolute;
             top: 5px;
@@ -283,24 +312,37 @@ const Sidebar = () => {
             color: #666;
             background: rgba(255, 255, 255, 0.8);
             padding: 2px 0;
-            z-index: 1002; /* Above menu items */
+            z-index: 1002;
             transition: opacity 0.3s ease-in-out;
-            height:10px;
+            height: 10px;
+          }
+
+          .menu-item span:nth-child(2) {
+            display: inline-block;
+            max-width: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .menu-item.active span:nth-child(2) {
+            max-width: none;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
           }
         }
       `}</style>
       <div
         className="sidebar"
         ref={sidebarRef}
-        style={{ touchAction: 'none' }} /* Prevent default touch actions */
+        style={{ touchAction: 'none' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Drag messages */}
         <div className="drag-message" style={{ opacity: isExpanded ? 0 : 1 }}>
-        <ChevronUp size={20} />
-
+          <ChevronUp size={20} />
           Drag up to see full menu
         </div>
         <div className="drag-message" style={{ opacity: isExpanded ? 1 : 0 }}>
@@ -331,11 +373,26 @@ const Sidebar = () => {
 
 // Layout Component
 const Layout = ({ children }) => {
-  const { isFormOpen } = useFormContext();
+  const { isFormOpen, setIsCityTableVisible } = useFormContext();
+  const location = useLocation();
+  const [tableScrollTop, setTableScrollTop] = useState(0);
+
+  useEffect(() => {
+    setIsCityTableVisible(location.pathname === '/students/city');
+  }, [location.pathname, setIsCityTableVisible]);
+
+  console.log('Layout - tableScrollTop:', tableScrollTop);
 
   return (
     <>
       <style>{`
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          overflow-x: hidden;
+          overflow-y: hidden;
+        }
         .layout {
           display: flex;
           flex-direction: column;
@@ -343,64 +400,73 @@ const Layout = ({ children }) => {
           background: ${
             isFormOpen
               ? 'rgb(0, 0, 0)'
-              : 'radial-gradient(rgba(255,255, 255,0), rgba(247,249,250,1) )'
+              : 'radial-gradient(rgba(255,255,255,0), rgba(247,249,250,1) )'
           };
           width: 100%;
-          overflow-x: hidden; /* Prevent horizontal overflow */
+          max-width: 100%;
+          box-sizing: border-box;
         }
 
         .main-content {
           display: flex;
           flex: 1;
           margin-top: 80px;
-          margin-left: 300px; /* Match sidebar width */
-          background: transparent; /* Let .layout background show through */
-          width: calc(100% - 260px); /* Consistent with margin-left */
+          margin-left: 280px;
+          background: transparent;
           box-sizing: border-box;
           min-width: 0;
+          max-width: calc(100% - 240px);
         }
 
-        /* Adjusted breakpoints for better responsiveness */
         @media (max-width: 1440px) {
           .main-content {
-            margin-left: 250px;
-            width: calc(100% - 220px);
+            margin-left: 240px;
+            max-width: calc(100% - 200px);
           }
         }
 
         @media (max-width: 1024px) {
           .main-content {
-            margin-left: 210px;
-            width: calc(100% - 180px);
+            margin-left: 200px;
+            max-width: calc(100% - 155px);
           }
         }
 
         @media (max-width: 768px) {
           .main-content {
-            margin-left: 210px;
-            width: calc(100% - 120px);
+            margin-left: 155px;
+            max-width: calc(100% - 155px);
           }
         }
 
         @media (max-width: 480px) {
+          html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+          }
           .main-content {
             margin-left: 0;
             width: 100%;
-            margin-top: 60px; /* Adjust for smaller header */
-            
-            margin-bottom: 60px; /* Reserve space for bottom bar */
+            max-width: 100%;
+            margin-top: 60px;
+            margin-bottom: 60px;
+            overflow-y: auto;
           }
         }
       `}</style>
       <div className="layout">
         <Header />
         <div className="main-content">
-          <Sidebar />
-          {children}
+          <Sidebar tableScrollTop={tableScrollTop} />
+          {React.cloneElement(children, { setTableScrollTop })}
         </div>
       </div>
     </>
   );
 };
+
 
 export default Layout;

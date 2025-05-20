@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Funnel, ArrowUp, Plus, Trash2, Pen, Eye, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Funnel, ArrowUp, Plus, Trash2, Pen, Eye, X, ArrowLeft, ArrowRight, Search } from 'lucide-react';
 import { useFormContext } from '../components/FormContext';
 import { IoIosFunnel } from 'react-icons/io';
+import bgImage from '../Images/BGImg.png';
 
-// CityForm Component (for adding new fields)
 const CityForm = ({ onSubmit, onCancel, onChange }) => {
   const [formData, setFormData] = useState({
     cityId: '',
@@ -148,7 +148,7 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
             Cancel
           </button>
           <button type="submit" className="submit-button">
-            Add Field
+            Add
           </button>
         </div>
       </form>
@@ -156,7 +156,6 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
   );
 };
 
-// CityViewForm Component (for viewing city details)
 const CityViewForm = ({ city, onDelete, onEdit, onClose }) => {
   return (
     <div className="city-form-container">
@@ -276,7 +275,6 @@ const CityViewForm = ({ city, onDelete, onEdit, onClose }) => {
   );
 };
 
-// Main CityManagementPage Component
 const CityManagementPage = () => {
   const { setIsFormOpen } = useFormContext();
   const [showForm, setShowForm] = useState(false);
@@ -288,20 +286,40 @@ const CityManagementPage = () => {
     status: '',
     payrollCityCode: '',
   });
-
-  const [cities, setCities] = useState([
-    { cityId: 1, cityCode: 'Andhra Pradesh', city: 'Guntur', state: 'Andhra Pradesh', district: 'Updated', zone: 'Updated', payrollCityCode: '01', status: 'Updated', syncStatus: 'Updated', syncDate: 'Updated' },
-    { cityId: 2, cityCode: 'Andhra Pradesh', city: 'Guntur', state: 'Andhra Pradesh', district: 'Updated', zone: 'Updated', payrollCityCode: '01', status: 'Updated', syncStatus: 'Updated', syncDate: 'Updated' },
-    { cityId: 3, cityCode: 'Andhra Pradesh', city: 'Guntur', state: 'Andhra Pradesh', district: 'Updated', zone: 'Updated', payrollCityCode: '01', status: 'Updated', syncStatus: 'Updated', syncDate: 'Updated' },
-    { cityId: 4, cityCode: 'Andhra Pradesh', city: 'Guntur', state: 'Andhra Pradesh', district: 'Updated', zone: 'Updated', payrollCityCode: '01', status: 'Updated', syncStatus: 'Updated', syncDate: 'Updated' },
-    { cityId: 5, cityCode: 'Andhra Pradesh', city: 'Guntur', state: 'Andhra Pradesh', district: 'Updated', zone: 'Updated', payrollCityCode: '01', status: 'Updated', syncStatus: 'Updated', syncDate: 'Updated' },
-    { cityId: 6, cityCode: 'Andhra Pradesh', city: 'Guntur', state: 'Andhra Pradesh', district: 'Updated', zone: 'Updated', payrollCityCode: '01', status: 'Updated', syncStatus: 'Updated', syncDate: 'Updated' },
-    { cityId: 7, cityCode: 'Andhra Pradesh', city: 'Guntur', state: 'Andhra Pradesh', district: 'Updated', zone: 'Updated', payrollCityCode: '01', status: 'Updated', syncStatus: "Updated", syncDate: 'Updated' },
-  ]);
+  const [pageTitle, setPageTitle] = useState('City');
+  const [tableScrollTop, setTableScrollTop] = useState(0);
+  const [shouldHideHeaderElements, setShouldHideHeaderElements] = useState(false);
+  const tableRef = useRef(null);
+  const filterRef = useRef(null);
+  const lastScrollY = useRef(0);
+  const [cities, setCities] = useState(
+    Array.from({ length: 30 }, (_, index) => ({
+      cityId: index + 1,
+      cityCode: 'Andhra Pradesh',
+      city: 'Guntur',
+      state: 'Andhra Pradesh',
+      district: 'Updated',
+      zone: 'Updated',
+      payrollCityCode: '01',
+      status: 'Updated',
+      syncStatus: 'Updated',
+      syncDate: 'Updated',
+    }))
+  );
 
   const [previewCity, setPreviewCity] = useState(null);
 
-  const filterRef = useRef(null);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 480px)');
+    const handleMediaQueryChange = (e) => {
+      setPageTitle(e.matches ? 'Student Master' : 'City');
+    };
+
+    handleMediaQueryChange(mediaQuery);
+    mediaQuery.addEventListener('change', handleMediaQueryChange);
+
+    return () => mediaQuery.removeEventListener('change', handleMediaQueryChange);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -317,6 +335,42 @@ const CityManagementPage = () => {
     setIsFormOpen(showForm || showViewForm);
     return () => setIsFormOpen(false);
   }, [showForm, showViewForm, setIsFormOpen]);
+
+  useEffect(() => {
+    const handleTableScroll = () => {
+      if (tableRef.current) {
+        const currentScrollY = tableRef.current.scrollTop;
+        console.log('Table Scroll Top:', currentScrollY);
+        setTableScrollTop(currentScrollY);
+
+        if (window.innerWidth <= 480) {
+          const tableScrollingUp = currentScrollY > lastScrollY.current;
+          const atTop = currentScrollY === 0;
+
+          if (atTop) {
+            setShouldHideHeaderElements(false);
+          } else if (tableScrollingUp) {
+            setShouldHideHeaderElements(true);
+          } else {
+            setShouldHideHeaderElements(false);
+          }
+
+          lastScrollY.current = currentScrollY;
+        }
+      }
+    };
+
+    const tableElement = tableRef.current;
+    if (tableElement) {
+      tableElement.addEventListener('scroll', handleTableScroll);
+    }
+
+    return () => {
+      if (tableElement) {
+        tableElement.removeEventListener('scroll', handleTableScroll);
+      }
+    };
+  }, []);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -360,88 +414,186 @@ const CityManagementPage = () => {
   };
 
   const handleEditCity = () => {
-    // For now, we'll just close the view form. You can extend this to open an edit form if needed.
     setShowViewForm(false);
     setSelectedCity(null);
   };
 
   return (
-    <div className="city-page-container" style={{ minHeight: '400px', width: '100%' }}>
+    <div className="city-page-container" style={{ minHeight: '400px', width: '100%' }} tableScrollTop={tableScrollTop}>
       {!showForm && !showViewForm && (
-        <div className="page-header">
-          <h2 className="page-title">City</h2>
-          <div className="page-actions">
-            <div className="filter-container" ref={filterRef}>
-              <button className="action-button" onClick={() => setIsFilterOpen(!isFilterOpen)}>
-                {Object.values(filters).some((value) => value !== '') ? (
-                  <IoIosFunnel className="icon" style={{ marginRight: '6px', width:'24', height:'24' }} />
-                ) : (
-                  <Funnel className="icon" style={{ marginRight: '6px',width:'24', height:'24'}} />
+        <>
+          <div className="page-header-scrollable">
+            <div className="page-header">
+              <div className="header-left">
+                {pageTitle === 'Student Master' && !shouldHideHeaderElements ? (
+                  <>
+                    <h2 className="page-title">{pageTitle}</h2>
+                    <div className="search-bar-wrapper">
+                      <Search className="search-icon" size={18} />
+                      <input
+                        type="text"
+                        className="search-bar"
+                        placeholder="Search"
+                      />
+                    </div>
+                  </>
+                ) : pageTitle !== 'Student Master' && (
+                  <h2 className="page-title">{pageTitle}</h2>
                 )}
-                Filter
-                {Object.values(filters).filter((value) => value !== '').length > 0 && (
-                  <span className="filter-badge">{Object.values(filters).filter((value) => value !== '').length}</span>
-                )}
-              </button>
-              {isFilterOpen && (
-                <div className="filter-dropdown">
-                  <div className="filter-header">
-                    <h3>Filters</h3>
-                    <button onClick={() => setIsFilterOpen(false)} className="close-filter">
-                      <X size={16} />
-                    </button>
-                  </div>
-                  <div className="filter-group">
-                    <label htmlFor="city-filter">City</label>
-                    <input
-                      type="text"
-                      id="city-filter"
-                      name="city"
-                      value={filters.city}
-                      onChange={handleFilterChange}
-                      placeholder="Filter by City"
-                    />
-                  </div>
-                  <div className="filter-group">
-                    <label htmlFor="status-filter">Status</label>
-                    <select id="status-filter" name="status" value={filters.status} onChange={handleFilterChange}>
-                      <option value="">All</option>
-                      <option value="Updated">Updated</option>
-                      <option value="Pending">Pending</option>
-                    </select>
-                  </div>
-                  <div className="filter-group">
-                    <label htmlFor="payrollCityCode-filter">Payroll City Code</label>
-                    <input
-                      type="text"
-                      id="payrollCityCode-filter"
-                      name="payrollCityCode"
-                      value={filters.payrollCityCode}
-                      onChange={handleFilterChange}
-                      placeholder="Filter by Payroll City Code"
-                    />
-                  </div>
-                  <div className="form-actions">
-                    <button onClick={clearFilters} className="clear-filter-button">
-                      Clear All
-                    </button>
+              </div>
+              <div className="page-actions">
+                <div className="filter-container" ref={filterRef}>
+                  <button className="action-button" onClick={() => setIsFilterOpen(!isFilterOpen)}>
+                    {Object.values(filters).some((value) => value !== '') ? (
+                      <IoIosFunnel className="icon" style={{ marginRight: '6px', width: '24', height: '24' }} />
+                    ) : (
+                      <Funnel className="icon" style={{ marginRight: '6px', width: '24', height: '24' }} />
+                    )}
+                    Filter
+                    {Object.values(filters).filter((value) => value !== '').length > 0 && (
+                      <span className="filter-badge">{Object.values(filters).filter((value) => value !== '').length}</span>
+                    )}
+                  </button>
+                  {isFilterOpen && (
+                    <div className="filter-dropdown">
+                      <div className="filter-header">
+                        <h3>Filters</h3>
+                        <button onClick={() => setIsFilterOpen(false)} className="close-filter">
+                          <X size={16} />
+                        </button>
+                      </div>
+                      <div className="filter-group">
+                        <label htmlFor="city-filter">City</label>
+                        <input
+                          type="text"
+                          id="city-filter"
+                          name="city"
+                          value={filters.city}
+                          onChange={handleFilterChange}
+                          placeholder="Filter by City"
+                        />
+                      </div>
+                      <div className="filter-group">
+                        <label htmlFor="status-filter">Status</label>
+                        <select id="status-filter" name="status" value={filters.status} onChange={handleFilterChange}>
+                          <option value="">All</option>
+                          <option value="Updated">Updated</option>
+                          <option value="Pending">Pending</option>
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label htmlFor="payrollCityCode-filter">Payroll City Code</label>
+                        <input
+                          type="text"
+                          id="payrollCityCode-filter"
+                          name="payrollCityCode"
+                          value={filters.payrollCityCode}
+                          onChange={handleFilterChange}
+                          placeholder="Filter by Payroll City Code"
+                        />
+                      </div>
+                      <div className="form-actions">
+                        <button onClick={clearFilters} className="clear-filter-button">
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button className="action-button">
+                  <ArrowUp className="icon" style={{ marginRight: '6px', width: '24', height: '24' }} />
+                  Export
+                </button>
+                <button className="action-button primary" onClick={() => setShowForm(true)}>
+                  <Plus className="icon" style={{ marginRight: '6px', width: '24', height: '24' }} />
+                  Add New Field
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="table-section">
+            <div className="table-wrapper" ref={tableRef}>
+              <div className="table-inner">
+                <table className="table-container">
+                  <thead className="Table_head">
+                    <tr>
+                      <th className="checkbox-column">
+                        <input type="checkbox" />
+                      </th>
+                      <th className="city-id-column">City ID</th>
+                      <th className="city-code-column">City Code</th>
+                      <th className="city-column">City</th>
+                      <th className="status-column">Status</th>
+                      <th className="district-id-column">District ID</th>
+                      <th className="zone-id-column">Zone ID</th>
+                      <th className="payroll-city-code-column">Payroll City Code</th>
+                      <th className="sync-status-column">Sync Status</th>
+                      <th className="sync-date-column">Sync Date</th>
+                      <th className="action-column">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...filteredCities, ...(previewCity ? [{ ...previewCity, cityId: cities.length + 1 }] : [])].map((row) => (
+                      <tr key={row.cityId || 'preview'}>
+                        <td className="checkbox-column">
+                          <input type="checkbox" disabled={row.cityId === undefined} />
+                        </td>
+                        <td className="city-id-column">{row.cityId || 'Preview'}</td>
+                        <td className="city-code-column">{row.cityCode}</td>
+                        <td className="city-column">{row.city}</td>
+                        <td className="status-column">{row.status}</td>
+                        <td className="district-id-column">{row.district}</td>
+                        <td className="zone-id-column">{row.zone}</td>
+                        <td className="payroll-city-code-column">{row.payrollCityCode}</td>
+                        <td className="sync-status-column">{row.syncStatus}</td>
+                        <td className="sync-date-column">{row.syncDate}</td>
+                        <td className="action-column">
+                          {row.cityId ? (
+                            <div className="table-actions">
+                              <span className="table-action">
+                                <Trash2 className="icon" />
+                              </span>
+                              <span className="table-action">
+                                <Pen className="icon" />
+                              </span>
+                              <span className="table-action" onClick={() => handleViewCity(row)}>
+                                <Eye className="icon" /> View
+                              </span>
+                            </div>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {!shouldHideHeaderElements && (
+              <div className="pagination">
+                <button className="pagination-button previous">
+                  <ArrowLeft className="icon" />
+                  <span>Previous</span>
+                </button>
+                <div className="pagination-content">
+                  <div className="pagination-numbers">
+                    {[1, 2, 3, '...', 8, 9, 10].map((page, index) => (
+                      <button key={index} className={`pagination-button ${page === 1 ? 'active' : ''}`}>
+                        {page}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
-            </div>
-            <button className="action-button">
-              <ArrowUp className="icon" style={{ marginRight: '6px',width:'24',height:'24' }} />
-              Export
-            </button>
-            <button className="action-button primary" onClick={() => setShowForm(true)}>
-              <Plus className="icon" style={{ marginRight: '6px',width:'24', height:'24' }} />
-              Add New Field
-            </button>
+                <button className="pagination-button next">
+                  Next <ArrowRight />
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+        </>
       )}
 
-      {showForm ? (
+      {showForm && (
         <CityForm
           onSubmit={handleAddCity}
           onCancel={() => {
@@ -450,7 +602,8 @@ const CityManagementPage = () => {
           }}
           onChange={handleFormChange}
         />
-      ) : showViewForm ? (
+      )}
+      {showViewForm && (
         <CityViewForm
           city={selectedCity}
           onDelete={handleDeleteCity}
@@ -460,87 +613,19 @@ const CityManagementPage = () => {
             setSelectedCity(null);
           }}
         />
-      ) : (
-        <>
-          <div className="table-wrapper">
-            <div className="table-inner">
-              <table className="table-container">
-                <thead className="Table_head">
-                  <tr>
-                    <th className="checkbox-column">
-                      <input type="checkbox" />
-                    </th>
-                    <th className="city-id-column">City ID</th>
-                    <th className="city-code-column">City Code</th>
-                    <th className="city-column">City</th>
-                    <th className="status-column">Status</th>
-                    <th className="district-id-column">District ID</th>
-                    <th className="zone-id-column">Zone ID</th>
-                    <th className="payroll-city-code-column">Payroll City Code</th>
-                    <th className="sync-status-column">Sync Status</th>
-                    <th className="sync-date-column">Sync Date</th>
-                    <th className="action-column">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...filteredCities, ...(previewCity ? [{ ...previewCity, cityId: cities.length + 1 }] : [])].map((row) => (
-                    <tr key={row.cityId || 'preview'}>
-                      <td className="checkbox-column">
-                        <input type="checkbox" disabled={row.cityId === undefined} />
-                      </td>
-                      <td className="city-id-column">{row.cityId || 'Preview'}</td>
-                      <td className="city-code-column">{row.cityCode}</td>
-                      <td className="city-column">{row.city}</td>
-                      <td className="status-column">{row.status}</td>
-                      <td className="district-id-column">{row.district}</td>
-                      <td className="zone-id-column">{row.zone}</td>
-                      <td className="payroll-city-code-column">{row.payrollCityCode}</td>
-                      <td className="sync-status-column">{row.syncStatus}</td>
-                      <td className="sync-date-column">{row.syncDate}</td>
-                      <td className="action-column">
-                        {row.cityId ? (
-                          <div className="table-actions">
-                            <span className="table-action">
-                              <Trash2 className="icon" />
-                            </span>
-                            <span className="table-action">
-                              <Pen className="icon" />
-                            </span>
-                            <span className="table-action" onClick={() => handleViewCity(row)}>
-                              <Eye className="icon" /> View
-                            </span>
-                          </div>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="pagination">
-            <button className="pagination-button previous">
-              <ArrowLeft className="icon" />
-              <span>Previous</span>
-            </button>
-            <div className="pagination-content">
-              <div className="pagination-numbers">
-                {[1, 2, 3, '...', 8, 9, 10].map((page, index) => (
-                  <button key={index} className={`pagination-button ${page === 1 ? 'active' : ''}`}>
-                    {page}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button className="pagination-button next">
-              Next <ArrowRight />
-            </button>
-          </div>
-        </>
       )}
 
       <style>{`
+        .city-page-container {
+          width: 100%;
+          min-height: 400px;
+        }
+
+        .page-header-scrollable {
+          overflow-y: auto;
+          max-height: 100vh;
+        }
+
         .page-header {
           display: flex;
           justify-content: space-between;
@@ -548,7 +633,15 @@ const CityManagementPage = () => {
           margin-bottom: 0px;
           background-color: rgba(255, 255, 255, 1);
           padding: 8px 16px;
-          width: 1180px;
+          width: 100%;
+          max-width: 1180px;
+          box-sizing: border-box;
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
         }
 
         .page-title {
@@ -612,6 +705,35 @@ const CityManagementPage = () => {
           vertical-align: middle;
         }
 
+        .search-bar-wrapper {
+          display: flex;
+          align-items: center;
+          background-color: #f0f0f0;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 4px 8px;
+          width: 200px;
+          transition: opacity 0.3s ease-in-out;
+        }
+
+        .search-icon {
+          color: #666;
+          margin-right: 8px;
+        }
+
+        .search-bar {
+          flex: 1;
+          border: none;
+          background: transparent;
+          font-size: 14px;
+          color: #444;
+          outline: none;
+        }
+
+        .search-bar::placeholder {
+          color: #888;
+        }
+
         .filter-dropdown {
           position: absolute;
           top: 40px;
@@ -668,9 +790,10 @@ const CityManagementPage = () => {
           color: #444;
         }
 
-        .filter-actions {
+        .form-actions {
           display: flex;
           justify-content: flex-end;
+          gap: 8px;
         }
 
         .clear-filter-button {
@@ -683,25 +806,31 @@ const CityManagementPage = () => {
           color: #444;
         }
 
-        .table-wrapper {
-          width: 1210px;
-          height: 644px;
-          overflow: auto;
-          margin: 0 auto;
-          position: relative;
+        .table-section {
+          width: 100%;
+          max-width: 1210px;
         }
-       
+
+        .table-wrapper {
+          width: 100%;
+          max-width: 1210px;
+          height: 644px;
+          overflow-x: auto;
+          overflow-y: auto;
+        }
 
         .table-inner {
-          width: 1320px;
-          overflow: hidden;
+          min-width: 1320px;
         }
 
         .table-container {
           width: 100%;
-          table-layout: auto;
+          table-layout: fixed;
           border-collapse: collapse;
           background-color: #f8f9fa;
+          position: relative;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
 
         .table-container th,
@@ -718,19 +847,15 @@ const CityManagementPage = () => {
 
         .Table_head {
           font-size: 12px;
+          background-color: #f8f9fa;
+          position: sticky;
+          top: 0;
+          z-index: 10;
         }
 
         .table-container th {
-          background-color: #f8f9fa;
           font-weight: 600;
-          font-size: 14px; 
-          position: sticky;
-          top: 0;
-          z-index: 1;
-        }
-
-        .table-container thead th:last-child {
-          padding-right: 17px;
+          font-size: 14px;
         }
 
         .table-container thead tr {
@@ -739,21 +864,33 @@ const CityManagementPage = () => {
 
         .checkbox-column {
           width: 40px;
+          position: sticky;
+          left: 0;
+          z-index: 20;
+          background-color: #f8f9fa;
+        }
+
+        .checkbox-column th {
+          position: sticky;
+          top: 0;
+          left: 0;
+          z-index: 30;
+          background-color: #f8f9fa;
         }
 
         .checkbox-column input[type="checkbox"] {
-          background: rgba(255, 255, 255, 1);
-          border: 1px solid rgba(208, 213, 221, 1);
           width: 16px;
           height: 16px;
+          margin: 0 auto;
+          display: block;
+          border: 1px solid rgba(208, 213, 221, 1);
+          border-radius: 4px;
           appearance: none;
           cursor: pointer;
-          border-radius: 4px;
+          background-color: #fff;
         }
 
         .checkbox-column input[type="checkbox"]:checked {
-          background: rgba(255, 255, 255, 1);
-          border: 1px solid rgba(208, 213, 221, 1);
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
           background-size: cover;
         }
@@ -823,14 +960,14 @@ const CityManagementPage = () => {
           padding: 10px 20px;
           box-sizing: border-box;
           z-index: 100;
-          border: 1px solid rgba(234, 236, 240, 1)
+          border: 1px solid rgba(234, 236, 240, 1);
+          transition: transform 0.3s ease-in-out;
         }
 
         .pagination-content {
           display: flex;
           justify-content: center;
           width: 100%;
-          margin-left: 250px;
         }
 
         .pagination-button {
@@ -840,8 +977,7 @@ const CityManagementPage = () => {
           font-size: 14px;
           padding: 8px 12px;
           cursor: pointer;
-          border: 1px solid rgba(234, 236, 240, 1)
-          //border: 1px solid #ccc;
+          border: 1px solid rgba(234, 236, 240, 1);
           border-radius: 5px;
         }
 
@@ -853,39 +989,33 @@ const CityManagementPage = () => {
           display: flex;
           align-items: center;
           gap: 2px;
-          
         }
 
         .pagination-numbers button {
           width: 40px;
           height: 40px;
-      border: 1px solid rgba(234, 236, 240, 1)
-          color:1px solid rgba(234, 236, 240, 1)
-
+          border: 1px solid rgba(234, 236, 240, 1);
           font-size: 16px;
           cursor: pointer;
-          border: none;
           border-radius: 8px;
           display: flex;
           justify-content: center;
           align-items: center;
         }
 
-.pagination-numbers button.active {
-  background: rgba(245, 247, 255, 1);
-  color: rgba(52, 37, 255, 1);
-  font-weight: 600;
-}
+        .pagination-numbers button.active {
+          background: rgba(245, 247, 255, 1);
+          color: rgba(52, 37, 255, 1);
+          font-weight: 600;
+        }
 
-     .previous {
-  position: absolute;
-  left: 40px;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 1);
-  border: 1px solid rgba(208, 213, 221, 1); 
-  margin-left: 260px;
-}
-
+        .previous {
+          position: absolute;
+          left: 20px;
+          font-size: 14px;
+          background: rgba(255, 255, 255, 1);
+          border: 1px solid rgba(208, 213, 221, 1);
+        }
 
         .next {
           position: absolute;
@@ -893,19 +1023,19 @@ const CityManagementPage = () => {
           font-size: 14px;
           background: rgba(255, 255, 255, 1);
           border: 1px solid rgba(208, 213, 221, 1);
-          margin-right: 20px;
         }
 
         .city-form-container {
-          position: absolute;
+          position: fixed;
           top: 180px;
-          left: 640px;
+          left: 50%;
+          transform: translateX(-50%);
           width: 480px;
           height: 416px;
           background: rgba(255, 255, 255, 1);
           border-radius: 12px;
           padding: 24px;
-          box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0px 4px 12px para(0, 0, 0, 0.1);
           overflow-y: auto;
           box-sizing: border-box;
           z-index: 1000;
@@ -916,7 +1046,6 @@ const CityManagementPage = () => {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 32px;
-          // border-bottom: 1px solid #e0e0e0;
           padding-bottom: 10px;
         }
 
@@ -953,7 +1082,6 @@ const CityManagementPage = () => {
           border: 1px solid #ddd;
           border-radius: 8px;
           font-size: 14px;
-         
           box-sizing: border-box;
         }
 
@@ -971,7 +1099,7 @@ const CityManagementPage = () => {
           display: block;
           font-size: 12px;
           font-weight: 500;
-           color: rgba(52, 64, 84, 1);  
+          color: rgba(52, 64, 84, 1);
           margin-bottom: 5px;
         }
 
@@ -1052,24 +1180,221 @@ const CityManagementPage = () => {
         .edit-button:hover {
           opacity: 0.9;
         }
-          @media (max-width: 1440px) {
-  .table-inner {
-    min-width: 600px; /* Reduce min-width to fit better */
-   
-  }
-}
 
-@media (max-width: 1024px) {
-  .table-inner {
-    min-width: 800px;
-  }
-}
+        @media (max-width: 1440px) {
+          .table-wrapper {
+            max-width: 100%;
+          }
+          .table-inner {
+            min-width: 100%;
+          }
+        }
 
-@media (max-width: 768px) {
-  .table-inner {
-    min-width: 600px;
-  }
-}
+        @media (max-width: 1024px) {
+          .page-header {
+            width: 100%;
+            max-width: 770px;
+          }
+          .table-wrapper {
+            max-width: 830px;
+          }
+          .table-inner {
+            min-width: 1320px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .page-header {
+            width: 100%;
+            max-width: 500px;
+          }
+          .table-wrapper {
+            max-width: 550px;
+          }
+          .table-inner {
+            min-width: 1320px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .page-header {
+            width: 100%;
+            padding: 8px 10px;
+            margin-left: 0;
+            flex-wrap: wrap;
+            gap: 12px;
+            background-image: url(${bgImage});
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .header-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 110px;
+          }
+
+          .page-title {
+            font-size: 20px;
+            font-weight: 500;
+            width: 150px;
+            height: 19px;
+          }
+
+          .search-bar-wrapper {
+            width: 95px;
+            height: 31px;
+            border-radius: 31px;
+            background: #FFFFFF;
+            border: 1px solid #DCDCDC;
+          }
+
+          .page-actions {
+            display: flex;
+            gap: 12px;
+            margin-left: 2px;
+            position: sticky;
+            top: 130px;
+            background: #fff;
+            z-index: 9;
+            padding: 8px 0;
+            width: 100%;
+          }
+
+          .action-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: auto;
+            height: 40px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #FFFFFF;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            color: #444;
+            position: relative;
+            box-sizing: border-box;
+          }
+
+          .table-section {
+            margin-top: 0;
+          }
+
+          .Table_head {
+            font-size: 12px;
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+          }
+
+          .table-wrapper {
+            max-width: 430px;
+            height: calc(100vh - 190px);
+            overflow-y: auto;
+          }
+
+          .table-inner {
+            min-width: 1320px;
+          }
+
+          .city-form-container {
+            width: 90%;
+            left: 5%;
+            transform: none;
+            top: 100px;
+          }
+
+          .pagination {
+            left: 0;
+            width: 100%;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: 375px) {
+          .page-title {
+            font-size: 20px;
+            font-weight: 700;
+            width: 170px;
+            height: 19px;
+          }
+
+          .page-header {
+            width: 100%;
+            padding: 8px 10px;
+            margin-left: 0;
+            flex-wrap: wrap;
+            gap: 10px;
+          }
+
+          .header-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+          }
+
+          .search-bar-wrapper {
+            width: 95px;
+            height: 31px;
+            border-radius: 31px;
+            background: #FFFFFF;
+            border: 1px solid #DCDCDC;
+          }
+
+          .action-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-width: 76px;
+            max-width: 160px;
+            height: 40px;
+            padding: 6px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #FFFFFF;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            color: #444;
+            position: relative;
+            box-sizing: border-box;
+          }
+
+          .table-wrapper {
+            max-width: 370px;
+          }
+
+          .table-inner {
+            min-width: 1320px;
+          }
+        }
+
+        @media (max-width: 320px) {
+          .page-header {
+            width: 100%;
+            padding: 8px 10px;
+          }
+
+          .search-bar-wrapper {
+            width: 120px;
+          }
+
+          .table-wrapper {
+            max-width: 330px;
+          }
+
+          .table-inner {
+            min-width: 1320px;
+          }
+        }
       `}</style>
     </div>
   );

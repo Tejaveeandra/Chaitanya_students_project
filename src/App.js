@@ -20,36 +20,43 @@ function App() {
   return (
     <FormProvider>
       <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<div></div>} /> {/* Empty div for default route */}
-            <Route path="/students" element={<StudentsMasters />}>
-              <Route path="state" element={<StateManagementPage />} />
-              <Route path="city" element={<CityManagementPage />} />
-              <Route path="campus" element={<CampusManagementPage />} />
-              <Route path="fee-payment-year" element={<FeePaymentYearPage />} />
-              <Route path="fee-heads" element={<FeeHeadsPage />} />
-              <Route path="organisation" element={<OrganisationManagementPage />} />
-              <Route path="card-type" element={<CardTypePage />} />
-              <Route path="stream" element={<StreamManagementPage />} />
-              <Route path="program-name" element={<ProgramNamePage />} />
-              <Route path="exam-program" element={<ExamProgramPage />} />
-              <Route path="course-track" element={<CourseTrackPage />} />
-            </Route>
-            <Route path="/application" element={<div></div>} />
-            <Route path="/employee" element={<div></div>} />
-            <Route path="/fleet" element={<div></div>} />
-            <Route path="/warehouse" element={<div></div>} />
-            <Route path="/sms" element={<div></div>} />
-            <Route path="/question-bank" element={<div></div>} />
-            <Route path="/assets" element={<div></div>} />
-            <Route path="/payment" element={<div></div>} />
-            <Route path="/cctv" element={<div></div>} />
-            <Route path="/hrms" element={<div></div>} />
-          </Routes>
-        </Layout>
+        <Routes>
+          <Route
+            path="/*"
+            element={
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<div></div>} />
+                  <Route path="/students" element={<StudentsMasters />}>
+                    <Route path="state" element={<StateManagementPage />} />
+                    <Route path="city" element={<CityManagementPage />} />
+                    <Route path="campus" element={<CampusManagementPage />} />
+                    <Route path="fee-payment-year" element={<FeePaymentYearPage />} />
+                    <Route path="fee-heads" element={<FeeHeadsPage />} />
+                    <Route path="organisation" element={<OrganisationManagementPage />} />
+                    <Route path="card-type" element={<CardTypePage />} />
+                    <Route path="stream" element={<StreamManagementPage />} />
+                    <Route path="program-name" element={<ProgramNamePage />} />
+                    <Route path="exam-program" element={<ExamProgramPage />} />
+                    <Route path="course-track" element={<CourseTrackPage />} />
+                  </Route>
+                  <Route path="/application" element={<div></div>} />
+                  <Route path="/employee" element={<div></div>} />
+                  <Route path="/fleet" element={<div></div>} />
+                  <Route path="/warehouse" element={<div></div>} />
+                  <Route path="/sms" element={<div></div>} />
+                  <Route path="/question-bank" element={<div></div>} />
+                  <Route path="/assets" element={<div></div>} />
+                  <Route path="/payment" element={<div></div>} />
+                  <Route path="/cctv" element={<div></div>} />
+                  <Route path="/hrms" element={<div></div>} />
+                </Routes>
+              </Layout>
+            }
+          />
+        </Routes>
       </Router>
-    </FormProvider> 
+    </FormProvider>
   );
 }
 
