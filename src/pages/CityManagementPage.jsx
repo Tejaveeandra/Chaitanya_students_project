@@ -10,7 +10,7 @@ const CityForm = ({ onSubmit, onCancel, onChange, initialData }) => {
     cityId: initialData?.cityId || '',
     cityCode: initialData?.cityCode || '',
     cityName: initialData?.cityName || '',
-    status: initialData?.status ? 'true' : 'false', // Convert boolean to string for form
+    status: initialData?.status ? 'true' : 'false',
     districtId: initialData?.districtId || '',
     zoneId: initialData?.zoneId || '',
     payrollCityCode: initialData?.payrollCityCode || '',
@@ -248,19 +248,26 @@ const CityManagementPage = () => {
   const [previewCity, setPreviewCity] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(15);
+  const [totalPages, setTotalPages] = useState(0);
   const tableRef = useRef(null);
   const filterRef = useRef(null);
   const lastScrollY = useRef(0);
 
   const API_BASE_URL = 'http://localhost:8000/api/cities';
 
-  // Fetch all cities
-  const fetchCities = async () => {
+  // Fetch all cities with pagination
+  const fetchCities = async (page = currentPage, size = pageSize) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API_BASE_URL}/getAllCities`);
-      setCities(response.data);
+      const response = await axios.get(`${API_BASE_URL}/cities`, {
+        params: { page, size }
+      });
+      setCities(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setCurrentPage(response.data.number);
     } catch (err) {
       setError('Failed to fetch cities. Please try again.');
       console.error(err);
@@ -290,25 +297,25 @@ const CityManagementPage = () => {
     setLoading(true);
     setError(null);
     try {
-      // Transform the data to match backend expectations
       const transformedCity = {
         cityId: newCity.cityId ? parseInt(newCity.cityId) : undefined,
         cityCode: parseInt(newCity.cityCode),
         cityName: newCity.cityName,
-        status: newCity.status === 'true', // Convert string to boolean
+        status: newCity.status === 'true',
         districtId: parseInt(newCity.districtId),
         zoneId: parseInt(newCity.zoneId),
         payrollCityCode: parseInt(newCity.payrollCityCode),
         syncStatus: newCity.syncStatus,
-        syncDate: newCity.syncDate || null, // Backend expects a date or null
+        syncDate: newCity.syncDate || null,
       };
 
-      console.log('Sending to backend:', transformedCity); // Log the transformed data
+      console.log('Sending to backend:', transformedCity);
 
       const response = await axios.post(`${API_BASE_URL}/addCity`, transformedCity);
       setCities((prev) => [...prev, response.data]);
       setPreviewCity(null);
       setShowForm(false);
+      fetchCities(currentPage, pageSize); // Refresh the current page
     } catch (err) {
       setError('Failed to add city: ' + err.message);
       console.error('Error adding city:', err.response?.data || err);
@@ -326,7 +333,7 @@ const CityManagementPage = () => {
         cityId: parseInt(updatedCity.cityId),
         cityCode: parseInt(updatedCity.cityCode),
         cityName: updatedCity.cityName,
-        status: updatedCity.status === 'true', // Convert string to boolean
+        status: updatedCity.status === 'true',
         districtId: parseInt(updatedCity.districtId),
         zoneId: parseInt(updatedCity.zoneId),
         payrollCityCode: parseInt(updatedCity.payrollCityCode),
@@ -338,6 +345,7 @@ const CityManagementPage = () => {
       setCities((prev) => prev.map((city) => (city.cityId === response.data.cityId ? response.data : city)));
       setShowForm(false);
       setEditCity(null);
+      fetchCities(currentPage, pageSize); // Refresh the current page
     } catch (err) {
       setError('Failed to update city: ' + err.message);
       console.error(err);
@@ -356,12 +364,21 @@ const CityManagementPage = () => {
         setCities((prev) => prev.filter((city) => city.cityId !== selectedCity.cityId));
         setShowViewForm(false);
         setSelectedCity(null);
+        fetchCities(currentPage, pageSize); // Refresh the current page
       } catch (err) {
         setError('Failed to delete city. Please try again.');
         console.error(err);
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    if (page >= 0 && page < totalPages) {
+      setCurrentPage(page);
+      fetchCities(page, pageSize);
     }
   };
 
@@ -453,7 +470,7 @@ const CityManagementPage = () => {
 
   const filteredCities = cities.filter((city) => {
     return (
-      (!filters.cityName || city.cityName.toLowerCase().includes(filters.city.toLowerCase())) &&
+      (!filters.cityName || city.cityName.toLowerCase().includes(filters.cityName.toLowerCase())) &&
       (!filters.status || (filters.status === 'true' ? city.status : !city.status)) &&
       (!filters.payrollCityCode || city.payrollCityCode.toString().includes(filters.payrollCityCode)) &&
       (!filters.districtId || city.districtId.toString().includes(filters.districtId)) &&
@@ -468,7 +485,7 @@ const CityManagementPage = () => {
       cityId: data.cityId || 'Preview',
       cityCode: data.cityCode || '',
       cityName: data.cityName || '',
-      status: data.status === 'true', // Convert to boolean for preview
+      status: data.status === 'true',
       districtId: data.districtId || '',
       zoneId: data.zoneId || '',
       payrollCityCode: data.payrollCityCode || '',
@@ -487,6 +504,29 @@ const CityManagementPage = () => {
     setShowForm(true);
   };
 
+  // Generate pagination numbers dynamically
+  const getPaginationNumbers = () => {
+    const maxPagesToShow = 5;
+    const pages = [];
+    const startPage = Math.max(0, currentPage - Math.floor(maxPagesToShow / 2));
+    const endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i + 1);
+    }
+
+    if (startPage > 0) {
+      pages.unshift('...');
+      pages.unshift(1);
+    }
+    if (endPage < totalPages - 1) {
+      pages.push('...');
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
   return (
     <div className="city-page-container" style={{ minHeight: '400px', width: '100%' }} tableScrollTop={tableScrollTop}>
       {!showForm && !showViewForm && (
@@ -503,8 +543,8 @@ const CityManagementPage = () => {
                         type="text"
                         className="search-bar"
                         placeholder="Search"
-                        value={filters.city}
-                        onChange={(e) => handleFilterChange({ target: { name: 'city', value: e.target.value } })}
+                        value={filters.cityName}
+                        onChange={(e) => handleFilterChange({ target: { name: 'cityName', value: e.target.value } })}
                       />
                     </div>
                   </>
@@ -538,7 +578,7 @@ const CityManagementPage = () => {
                         <input
                           type="text"
                           id="city-filter"
-                          name="city"
+                          name="cityName"
                           value={filters.cityName}
                           onChange={handleFilterChange}
                           placeholder="Filter by City"
@@ -697,20 +737,33 @@ const CityManagementPage = () => {
 
             {!shouldHideHeaderElements && (
               <div className="pagination">
-                <button className="pagination-button previous">
+                <button
+                  className="pagination-button previous"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                >
                   <ArrowLeft className="icon" />
                   <span>Previous</span>
                 </button>
                 <div className="pagination-content">
                   <div className="pagination-numbers">
-                    {[1, 2, 3, '...', 8, 9, 10].map((page, index) => (
-                      <button key={index} className={`pagination-button ${page === 1 ? 'active' : ''}`}>
+                    {getPaginationNumbers().map((page, index) => (
+                      <button
+                        key={index}
+                        className={`pagination-button ${page === currentPage + 1 ? 'active' : ''}`}
+                        onClick={() => typeof page === 'number' && handlePageChange(page - 1)}
+                        disabled={page === '...'}
+                      >
                         {page}
                       </button>
                     ))}
                   </div>
                 </div>
-                <button className="pagination-button next">
+                <button
+                  className="pagination-button next"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages - 1}
+                >
                   Next <ArrowRight />
                 </button>
               </div>
@@ -1097,7 +1150,7 @@ const CityManagementPage = () => {
         }
 
         .pagination {
-          display: none;
+          display: flex;
           align-items: center;
           position: fixed;
           bottom: 0;
@@ -1127,6 +1180,11 @@ const CityManagementPage = () => {
           border-radius: 5px;
         }
 
+        .pagination-button:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+
         .pagination-button .icon {
           font-size: 16px;
         }
@@ -1153,6 +1211,11 @@ const CityManagementPage = () => {
           background: rgba(245, 247, 255, 1);
           color: rgba(52, 37, 255, 1);
           font-weight: 600;
+        }
+
+        .pagination-numbers button:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
         }
 
         .previous {
@@ -1550,7 +1613,6 @@ const CityManagementPage = () => {
           .form-row:nth-child(3) .form-group.small-input {
             flex: 0 0 calc(50% - 6px);
             max-width: calc(50% - 6px);
-             
           }
 
           .form-row:nth-child(3) .form-group.small-input:nth-child(2),
@@ -1563,7 +1625,6 @@ const CityManagementPage = () => {
           .form-row:nth-child(3)::after {
             content: '';
             display: block;
-            
             clear: both;
             gap: 10px;
           }
