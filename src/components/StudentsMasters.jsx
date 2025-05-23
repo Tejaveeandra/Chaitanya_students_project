@@ -12,9 +12,17 @@ import StreamImage from '../Images/Steam.png';
 import ProgramNameImage from '../Images/ProgramName.png';
 import ExamProgramImage from '../Images/ExamProgram.png';
 import CourseTrackImage from '../Images/CourseTrack.png';
-import bgImage from '../Images/BGImg.png'; // Added import for BGImg.png
+import bgImage from '../Images/BGImg.png';
 
 const StudentsMasters = () => {
+  // Note: If other routes (e.g., state, campus) are not implemented, you can temporarily reduce the filterButtons array to only include implemented routes, like so:
+  // const filterButtons = [
+  //   {
+  //     name: 'City',
+  //     icon: <img src={GroupIcon} alt="City" style={{ width: 18, height: 18 }} />,
+  //     path: 'city',
+  //   },
+  // ];
   const filterButtons = [
     {
       name: 'State',
@@ -116,7 +124,7 @@ const StudentsMasters = () => {
           font-size: 24px;
           font-weight: 700;
           margin-bottom: 8px;
-          color: #000; /* Ensure text is readable on background */
+          color: #000;
         }
 
         .description {
@@ -147,7 +155,7 @@ const StudentsMasters = () => {
           border: 1px solid #e2e8f0;
           border-radius: 20px;
           font-size: 14px;
-          background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent for readability */
+          background-color: rgba(255, 255, 255, 0.9);
         }
 
         .search-bar::placeholder {
@@ -197,7 +205,6 @@ const StudentsMasters = () => {
           -webkit-box-orient: vertical;
         }
 
-        /* 1440px breakpoint */
         @media (max-width: 1440px) {
           .students-masters {
             padding: 20px;
@@ -221,7 +228,6 @@ const StudentsMasters = () => {
           }
         }
 
-        /* 1024px breakpoint */
         @media (max-width: 1024px) {
           .students-masters {
             padding: 16px;
@@ -257,7 +263,6 @@ const StudentsMasters = () => {
           }
         }
 
-        /* 768px breakpoint */
         @media (max-width: 768px) {
           .students-masters {
             padding: 14px;
@@ -301,39 +306,35 @@ const StudentsMasters = () => {
           }
         }
 
-       /* 480px and below breakpoint */
-  @media (max-width: 480px) {
-    .students-masters {
-      padding: 12px;
-      min-height: 300px;
-    
-    }
+        @media (max-width: 480px) {
+          .students-masters {
+            padding: 12px;
+            min-height: 300px;
+          }
 
-    .top-section {
-      gap: 6px;
-      flex-direction: column;
-      align-items: flex-start;
-    }
+          .top-section {
+            gap: 6px;
+            flex-direction: column;
+            align-items: flex-start;
+          }
 
-    .left-section {
-      // // width: 340px;
-      // height: 168px;
-      margin-left: 10px; /* Using margin-left to simulate left: 10px */
-      margin-top:-20px;
-      background-image: url(${bgImage});
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center;
-      padding: 12px;
-      border-bottom-right-radius: 8px;
-      border-bottom-left-radius: 8px;
-      border-right: 1px solid #e2e8f0; /* Assuming a border color */
-      border-bottom: 1px solid #e2e8f0;
-      border-left: 1px solid #e2e8f0;
-      box-sizing: border-box;
-    }
+          .left-section {
+            margin-left: 10px;
+            margin-top: -20px;
+            background-image: url(${bgImage});
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            padding: 12px;
+            border-bottom-right-radius: 8px;
+            border-bottom-left-radius: 8px;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            border-left: 1px solid #e2e8f0;
+            box-sizing: border-box;
+          }
 
-   .right-section {
+          .right-section {
             display: flex;
             flex-wrap: wrap;
             gap: 12px 20px;
@@ -342,58 +343,57 @@ const StudentsMasters = () => {
             justify-content: flex-start;
           }
 
-    .title {
-        width:185px;
-        height:27px;
-      font-size: 22px;
-    }
+          .title {
+            width: 185px;
+            height: 27px;
+            font-size: 22px;
+          }
 
-    .description {
-      font-size: 14px;
-      width: 90%;
-      margin-bottom: 12px;
-    }
+          .description {
+            font-size: 14px;
+            width: 90%;
+            margin-bottom: 12px;
+          }
 
-    .search-bar-wrapper {
-      max-width: 50%;
-    }
+          .search-bar-wrapper {
+            max-width: 50%;
+          }
 
-    .search-bar {
-      padding: 6px 10px;
-      padding-left: 32px;
-      font-size: 12px;
-    }
+          .search-bar {
+            padding: 6px 10px;
+            padding-left: 32px;
+            font-size: 12px;
+          }
 
-    .search-icon {
-      left: 8px;
-      width: 16px;
-      height: 16px;
-    }
+          .search-icon {
+            left: 8px;
+            width: 16px;
+            height: 16px;
+          }
 
-    .filter-button {
-      padding: 4px 6px;
-      font-size: 10px;
-     
-      min-width: 91px;
-      height:32px;
-      max-width: none;
-      gap: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
+          .filter-button {
+            padding: 4px 6px;
+            font-size: 10px;
+            min-width: 91px;
+            height: 32px;
+            max-width: none;
+            gap: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
 
-    .filter-button img {
-      width: 14px;
-      height: 14px;
-    }
+          .filter-button img {
+            width: 14px;
+            height: 14px;
+          }
 
-    .filter-button span {
-      font-size: 14px;
-      -webkit-line-clamp: 2;
-      white-space: normal;
-    }
-  }
+          .filter-button span {
+            font-size: 14px;
+            -webkit-line-clamp: 2;
+            white-space: normal;
+          }
+        }
       `}</style>
 
       <div>

@@ -2,19 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Funnel, ArrowUp, Plus, Trash2, Pen, Eye, X, ArrowLeft, ArrowRight, Search } from 'lucide-react';
 import { useFormContext } from '../components/FormContext';
 import { IoIosFunnel } from 'react-icons/io';
-import bgImage from '../Images/BGImg.png';
+import axios from 'axios';
 
-const CityForm = ({ onSubmit, onCancel, onChange }) => {
+// CityForm component
+const CityForm = ({ onSubmit, onCancel, onChange, initialData }) => {
   const [formData, setFormData] = useState({
-    cityId: '',
-    cityCode: '',
-    city: '',
-    status: '',
-    district: '',
-    zone: '',
-    payrollCityCode: '',
-    syncStatus: '',
-    syncDate: '',
+    cityId: initialData?.cityId || '',
+    cityCode: initialData?.cityCode || '',
+    cityName: initialData?.cityName || '',
+    status: initialData?.status ? 'true' : 'false', // Convert boolean to string for form
+    districtId: initialData?.districtId || '',
+    zoneId: initialData?.zoneId || '',
+    payrollCityCode: initialData?.payrollCityCode || '',
+    syncStatus: initialData?.syncStatus || '',
+    syncDate: initialData?.syncDate || '',
   });
 
   const handleChange = (e) => {
@@ -32,7 +33,7 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
   return (
     <div className="city-form-container">
       <div className="form-header">
-        <h2 className="form-title">Add New Field</h2>
+        <h2 className="form-title">{initialData ? 'Edit City' : 'Add New Field'}</h2>
         <button className="close-button" onClick={onCancel}>
           <X size={16} />
         </button>
@@ -48,6 +49,7 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
               value={formData.cityId}
               onChange={handleChange}
               placeholder="Enter Value"
+              disabled={!!initialData}
             />
           </div>
           <div className="form-group small-input">
@@ -67,7 +69,7 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
               type="text"
               id="city"
               name="city"
-              value={formData.city}
+              value={formData.cityName}
               onChange={handleChange}
               placeholder="Enter Value"
             />
@@ -76,33 +78,34 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
         <div className="form-row">
           <div className="form-group small-input">
             <label htmlFor="status">Status</label>
-            <input
-              type="text"
+            <select
               id="status"
               name="status"
               value={formData.status}
               onChange={handleChange}
-              placeholder="Enter Value"
-            />
+            >
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
           </div>
           <div className="form-group small-input">
-            <label htmlFor="district">District ID</label>
+            <label htmlFor="districtId">District ID</label>
             <input
               type="text"
-              id="district"
-              name="district"
-              value={formData.district}
+              id="districtId"
+              name="districtId"
+              value={formData.districtId}
               onChange={handleChange}
               placeholder="Enter Value"
             />
           </div>
           <div className="form-group large-input">
-            <label htmlFor="zone">Zone ID</label>
+            <label htmlFor="zoneId">Zone ID</label>
             <input
               type="text"
-              id="zone"
-              name="zone"
-              value={formData.zone}
+              id="zoneId"
+              name="zoneId"
+              value={formData.zoneId}
               onChange={handleChange}
               placeholder="Enter Value"
             />
@@ -134,7 +137,7 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
           <div className="form-group small-input">
             <label htmlFor="syncDate">Sync Date</label>
             <input
-              type="text"
+              type="date"
               id="syncDate"
               name="syncDate"
               value={formData.syncDate}
@@ -148,7 +151,7 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
             Cancel
           </button>
           <button type="submit" className="submit-button">
-            Add
+            {initialData ? 'Update' : 'Add'}
           </button>
         </div>
       </form>
@@ -156,6 +159,7 @@ const CityForm = ({ onSubmit, onCancel, onChange }) => {
   );
 };
 
+// CityViewForm component
 const CityViewForm = ({ city, onDelete, onEdit, onClose }) => {
   return (
     <div className="city-form-container">
@@ -169,97 +173,43 @@ const CityViewForm = ({ city, onDelete, onEdit, onClose }) => {
         <div className="form-row">
           <div className="form-group small-input">
             <label htmlFor="cityId">City ID</label>
-            <input
-              type="text"
-              id="cityId"
-              name="cityId"
-              value={city.cityId}
-              readOnly
-            />
+            <input type="text" id="cityId" name="cityId" value={city.cityId} readOnly />
           </div>
           <div className="form-group small-input">
             <label htmlFor="cityCode">City Code</label>
-            <input
-              type="text"
-              id="cityCode"
-              name="cityCode"
-              value={city.cityCode}
-              readOnly
-            />
+            <input type="text" id="cityCode" name="cityCode" value={city.cityCode} readOnly />
           </div>
           <div className="form-group large-input">
             <label htmlFor="city">City Name</label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              value={city.city}
-              readOnly
-            />
+            <input type="text" id="city" name="city" value={city.cityName} readOnly />
           </div>
         </div>
         <div className="form-row">
           <div className="form-group small-input">
             <label htmlFor="status">Status</label>
-            <input
-              type="text"
-              id="status"
-              name="status"
-              value={city.status}
-              readOnly
-            />
+            <input type="text" id="status" name="status" value={city.status ? 'Active' : 'Inactive'} readOnly />
           </div>
           <div className="form-group small-input">
-            <label htmlFor="district">District ID</label>
-            <input
-              type="text"
-              id="district"
-              name="district"
-              value={city.district}
-              readOnly
-            />
+            <label htmlFor="districtId">District ID</label>
+            <input type="text" id="districtId" name="districtId" value={city.districtId || 'N/A'} readOnly />
           </div>
           <div className="form-group large-input">
-            <label htmlFor="zone">Zone ID</label>
-            <input
-              type="text"
-              id="zone"
-              name="zone"
-              value={city.zone}
-              readOnly
-            />
+            <label htmlFor="zoneId">Zone ID</label>
+            <input type="text" id="zoneId" name="zoneId" value={city.zoneId || 'N/A'} readOnly />
           </div>
         </div>
         <div className="form-row">
           <div className="form-group large-input">
             <label htmlFor="payrollCityCode">Payroll City Code</label>
-            <input
-              type="text"
-              id="payrollCityCode"
-              name="payrollCityCode"
-              value={city.payrollCityCode}
-              readOnly
-            />
+            <input type="text" id="payrollCityCode" name="payrollCityCode" value={city.payrollCityCode} readOnly />
           </div>
           <div className="form-group small-input">
             <label htmlFor="syncStatus">Sync Status</label>
-            <input
-              type="text"
-              id="syncStatus"
-              name="syncStatus"
-              value={city.syncStatus}
-              readOnly
-            />
+            <input type="text" id="syncStatus" name="syncStatus" value={city.syncStatus} readOnly />
           </div>
           <div className="form-group small-input">
             <label htmlFor="syncDate">Sync Date</label>
-            <input
-              type="text"
-              id="syncDate"
-              name="syncDate"
-              value={city.syncDate}
-              readOnly
-            />
+            <input type="text" id="syncDate" name="syncDate" value={city.syncDate} readOnly />
           </div>
         </div>
         <div className="form-actions">
@@ -276,38 +226,148 @@ const CityViewForm = ({ city, onDelete, onEdit, onClose }) => {
 };
 
 const CityManagementPage = () => {
-  const { setIsFormOpen } = useFormContext();
+  const { setIsFormOpen, setSidebarVisible } = useFormContext();
   const [showForm, setShowForm] = useState(false);
   const [showViewForm, setShowViewForm] = useState(false);
+  const [editCity, setEditCity] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
-    city: '',
+    cityName: '',
     status: '',
     payrollCityCode: '',
+    districtId: '',
+    zoneId: '',
+    syncStatus: '',
+    syncDate: '',
   });
   const [pageTitle, setPageTitle] = useState('City');
   const [tableScrollTop, setTableScrollTop] = useState(0);
   const [shouldHideHeaderElements, setShouldHideHeaderElements] = useState(false);
+  const [cities, setCities] = useState([]);
+  const [previewCity, setPreviewCity] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const tableRef = useRef(null);
   const filterRef = useRef(null);
   const lastScrollY = useRef(0);
-  const [cities, setCities] = useState(
-    Array.from({ length: 30 }, (_, index) => ({
-      cityId: index + 1,
-      cityCode: 'Andhra Pradesh',
-      city: 'Guntur',
-      state: 'Andhra Pradesh',
-      district: 'Updated',
-      zone: 'Updated',
-      payrollCityCode: '01',
-      status: 'Updated',
-      syncStatus: 'Updated',
-      syncDate: 'Updated',
-    }))
-  );
 
-  const [previewCity, setPreviewCity] = useState(null);
+  const API_BASE_URL = 'http://localhost:8000/api/cities';
+
+  // Fetch all cities
+  const fetchCities = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/getAllCities`);
+      setCities(response.data);
+    } catch (err) {
+      setError('Failed to fetch cities. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch city by ID
+  const fetchCityById = async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/getCityById/${id}`);
+      setSelectedCity(response.data);
+      setShowViewForm(true);
+    } catch (err) {
+      setError('Failed to fetch city details. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add a new city
+  const handleAddCity = async (newCity) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Transform the data to match backend expectations
+      const transformedCity = {
+        cityId: newCity.cityId ? parseInt(newCity.cityId) : undefined,
+        cityCode: parseInt(newCity.cityCode),
+        cityName: newCity.cityName,
+        status: newCity.status === 'true', // Convert string to boolean
+        districtId: parseInt(newCity.districtId),
+        zoneId: parseInt(newCity.zoneId),
+        payrollCityCode: parseInt(newCity.payrollCityCode),
+        syncStatus: newCity.syncStatus,
+        syncDate: newCity.syncDate || null, // Backend expects a date or null
+      };
+
+      console.log('Sending to backend:', transformedCity); // Log the transformed data
+
+      const response = await axios.post(`${API_BASE_URL}/addCity`, transformedCity);
+      setCities((prev) => [...prev, response.data]);
+      setPreviewCity(null);
+      setShowForm(false);
+    } catch (err) {
+      setError('Failed to add city: ' + err.message);
+      console.error('Error adding city:', err.response?.data || err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update a city
+  const handleUpdateCity = async (updatedCity) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const transformedCity = {
+        cityId: parseInt(updatedCity.cityId),
+        cityCode: parseInt(updatedCity.cityCode),
+        cityName: updatedCity.cityName,
+        status: updatedCity.status === 'true', // Convert string to boolean
+        districtId: parseInt(updatedCity.districtId),
+        zoneId: parseInt(updatedCity.zoneId),
+        payrollCityCode: parseInt(updatedCity.payrollCityCode),
+        syncStatus: updatedCity.syncStatus,
+        syncDate: updatedCity.syncDate || null,
+      };
+
+      const response = await axios.put(`${API_BASE_URL}/updateCity/${updatedCity.cityId}`, transformedCity);
+      setCities((prev) => prev.map((city) => (city.cityId === response.data.cityId ? response.data : city)));
+      setShowForm(false);
+      setEditCity(null);
+    } catch (err) {
+      setError('Failed to update city: ' + err.message);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete a city
+  const handleDeleteCity = async () => {
+    if (selectedCity) {
+      setLoading(true);
+      setError(null);
+      try {
+        await axios.delete(`${API_BASE_URL}/deleteCity/${selectedCity.cityId}`);
+        setCities((prev) => prev.filter((city) => city.cityId !== selectedCity.cityId));
+        setShowViewForm(false);
+        setSelectedCity(null);
+      } catch (err) {
+        setError('Failed to delete city. Please try again.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchCities();
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 480px)');
@@ -340,7 +400,6 @@ const CityManagementPage = () => {
     const handleTableScroll = () => {
       if (tableRef.current) {
         const currentScrollY = tableRef.current.scrollTop;
-        console.log('Table Scroll Top:', currentScrollY);
         setTableScrollTop(currentScrollY);
 
         if (window.innerWidth <= 480) {
@@ -349,10 +408,13 @@ const CityManagementPage = () => {
 
           if (atTop) {
             setShouldHideHeaderElements(false);
+            setSidebarVisible(true);
           } else if (tableScrollingUp) {
             setShouldHideHeaderElements(true);
+            setSidebarVisible(false);
           } else {
             setShouldHideHeaderElements(false);
+            setSidebarVisible(true);
           }
 
           lastScrollY.current = currentScrollY;
@@ -370,7 +432,7 @@ const CityManagementPage = () => {
         tableElement.removeEventListener('scroll', handleTableScroll);
       }
     };
-  }, []);
+  }, [setSidebarVisible]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -378,44 +440,51 @@ const CityManagementPage = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ city: '', status: '', payrollCityCode: '' });
+    setFilters({
+      cityName: '',
+      status: '',
+      payrollCityCode: '',
+      districtId: '',
+      zoneId: '',
+      syncStatus: '',
+      syncDate: '',
+    });
   };
 
   const filteredCities = cities.filter((city) => {
     return (
-      (!filters.city || city.city.toLowerCase().includes(filters.city.toLowerCase())) &&
-      (!filters.status || city.status === filters.status) &&
-      (!filters.payrollCityCode || city.payrollCityCode === filters.payrollCityCode)
+      (!filters.cityName || city.cityName.toLowerCase().includes(filters.city.toLowerCase())) &&
+      (!filters.status || (filters.status === 'true' ? city.status : !city.status)) &&
+      (!filters.payrollCityCode || city.payrollCityCode.toString().includes(filters.payrollCityCode)) &&
+      (!filters.districtId || city.districtId.toString().includes(filters.districtId)) &&
+      (!filters.zoneId || city.zoneId.toString().includes(filters.zoneId)) &&
+      (!filters.syncStatus || city.syncStatus === filters.syncStatus) &&
+      (!filters.syncDate || city.syncDate.toString().toLowerCase().includes(filters.syncDate.toLowerCase()))
     );
   });
 
-  const handleAddCity = (newCity) => {
-    const nextId = cities.length + 1;
-    setCities((prev) => [...prev, { ...newCity, cityId: nextId, syncDate: newCity.syncDate || 'Updated', syncStatus: newCity.syncStatus || 'Updated' }]);
-    setPreviewCity(null);
-    setShowForm(false);
-  };
-
   const handleFormChange = (data) => {
-    setPreviewCity(data);
+    setPreviewCity({
+      cityId: data.cityId || 'Preview',
+      cityCode: data.cityCode || '',
+      cityName: data.cityName || '',
+      status: data.status === 'true', // Convert to boolean for preview
+      districtId: data.districtId || '',
+      zoneId: data.zoneId || '',
+      payrollCityCode: data.payrollCityCode || '',
+      syncStatus: data.syncStatus || '',
+      syncDate: data.syncDate || '',
+    });
   };
 
   const handleViewCity = (city) => {
-    setSelectedCity(city);
-    setShowViewForm(true);
-  };
-
-  const handleDeleteCity = () => {
-    if (selectedCity) {
-      setCities((prev) => prev.filter((city) => city.cityId !== selectedCity.cityId));
-      setShowViewForm(false);
-      setSelectedCity(null);
-    }
+    fetchCityById(city.cityId);
   };
 
   const handleEditCity = () => {
+    setEditCity(selectedCity);
     setShowViewForm(false);
-    setSelectedCity(null);
+    setShowForm(true);
   };
 
   return (
@@ -434,6 +503,8 @@ const CityManagementPage = () => {
                         type="text"
                         className="search-bar"
                         placeholder="Search"
+                        value={filters.city}
+                        onChange={(e) => handleFilterChange({ target: { name: 'city', value: e.target.value } })}
                       />
                     </div>
                   </>
@@ -463,12 +534,12 @@ const CityManagementPage = () => {
                         </button>
                       </div>
                       <div className="filter-group">
-                        <label htmlFor="city-filter">City</label>
+                        <label htmlFor="city-filter">CityName</label>
                         <input
                           type="text"
                           id="city-filter"
                           name="city"
-                          value={filters.city}
+                          value={filters.cityName}
                           onChange={handleFilterChange}
                           placeholder="Filter by City"
                         />
@@ -477,8 +548,8 @@ const CityManagementPage = () => {
                         <label htmlFor="status-filter">Status</label>
                         <select id="status-filter" name="status" value={filters.status} onChange={handleFilterChange}>
                           <option value="">All</option>
-                          <option value="Updated">Updated</option>
-                          <option value="Pending">Pending</option>
+                          <option value="true">Active</option>
+                          <option value="false">Inactive</option>
                         </select>
                       </div>
                       <div className="filter-group">
@@ -490,6 +561,47 @@ const CityManagementPage = () => {
                           value={filters.payrollCityCode}
                           onChange={handleFilterChange}
                           placeholder="Filter by Payroll City Code"
+                        />
+                      </div>
+                      <div className="filter-group">
+                        <label htmlFor="districtId-filter">District ID</label>
+                        <input
+                          type="text"
+                          id="districtId-filter"
+                          name="districtId"
+                          value={filters.districtId}
+                          onChange={handleFilterChange}
+                          placeholder="Filter by District ID"
+                        />
+                      </div>
+                      <div className="filter-group">
+                        <label htmlFor="zoneId-filter">Zone ID</label>
+                        <input
+                          type="text"
+                          id="zoneId-filter"
+                          name="zoneId"
+                          value={filters.zoneId}
+                          onChange={handleFilterChange}
+                          placeholder="Filter by Zone ID"
+                        />
+                      </div>
+                      <div className="filter-group">
+                        <label htmlFor="syncStatus-filter">Sync Status</label>
+                        <select id="syncStatus-filter" name="syncStatus" value={filters.syncStatus} onChange={handleFilterChange}>
+                          <option value="">All</option>
+                          <option value="Updated">Updated</option>
+                          <option value="Pending">Pending</option>
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label htmlFor="syncDate-filter">Sync Date</label>
+                        <input
+                          type="text"
+                          id="syncDate-filter"
+                          name="syncDate"
+                          value={filters.syncDate}
+                          onChange={handleFilterChange}
+                          placeholder="Filter by Sync Date"
                         />
                       </div>
                       <div className="form-actions">
@@ -512,6 +624,8 @@ const CityManagementPage = () => {
             </div>
           </div>
           <div className="table-section">
+            {loading && <div>Loading...</div>}
+            {error && <div className="error-message">{error}</div>}
             <div className="table-wrapper" ref={tableRef}>
               <div className="table-inner">
                 <table className="table-container">
@@ -533,34 +647,46 @@ const CityManagementPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...filteredCities, ...(previewCity ? [{ ...previewCity, cityId: cities.length + 1 }] : [])].map((row) => (
+                    {[...filteredCities, ...(previewCity ? [{ ...previewCity, cityId: 'Preview' }] : [])].map((row) => (
                       <tr key={row.cityId || 'preview'}>
                         <td className="checkbox-column">
-                          <input type="checkbox" disabled={row.cityId === undefined} />
+                          <input type="checkbox" disabled={row.cityId === 'Preview'} />
                         </td>
-                        <td className="city-id-column">{row.cityId || 'Preview'}</td>
+                        <td className="city-id-column">{row.cityId}</td>
                         <td className="city-code-column">{row.cityCode}</td>
-                        <td className="city-column">{row.city}</td>
-                        <td className="status-column">{row.status}</td>
-                        <td className="district-id-column">{row.district}</td>
-                        <td className="zone-id-column">{row.zone}</td>
+                        <td className="city-column">{row.cityName}</td>
+                        <td className="status-column">{row.status ? 'Active' : 'Inactive'}</td>
+                        <td className="district-id-column">{row.districtId || 'N/A'}</td>
+                        <td className="zone-id-column">{row.zoneId || 'N/A'}</td>
                         <td className="payroll-city-code-column">{row.payrollCityCode}</td>
                         <td className="sync-status-column">{row.syncStatus}</td>
                         <td className="sync-date-column">{row.syncDate}</td>
                         <td className="action-column">
-                          {row.cityId ? (
+                          {row.cityId !== 'Preview' && (
                             <div className="table-actions">
-                              <span className="table-action">
+                              <span
+                                className="table-action"
+                                onClick={() => {
+                                  setSelectedCity(row);
+                                  handleDeleteCity();
+                                }}
+                              >
                                 <Trash2 className="icon" />
                               </span>
-                              <span className="table-action">
+                              <span
+                                className="table-action"
+                                onClick={() => {
+                                  setEditCity(row);
+                                  setShowForm(true);
+                                }}
+                              >
                                 <Pen className="icon" />
                               </span>
                               <span className="table-action" onClick={() => handleViewCity(row)}>
                                 <Eye className="icon" /> View
                               </span>
                             </div>
-                          ) : null}
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -595,12 +721,14 @@ const CityManagementPage = () => {
 
       {showForm && (
         <CityForm
-          onSubmit={handleAddCity}
+          onSubmit={editCity ? handleUpdateCity : handleAddCity}
           onCancel={() => {
             setShowForm(false);
             setPreviewCity(null);
+            setEditCity(null);
           }}
           onChange={handleFormChange}
+          initialData={editCity}
         />
       )}
       {showViewForm && (
@@ -621,21 +749,29 @@ const CityManagementPage = () => {
           min-height: 400px;
         }
 
+        .error-message {
+          color: red;
+          text-align: center;
+          margin-bottom: 16px;
+        }
+
         .page-header-scrollable {
-          overflow-y: auto;
           max-height: 100vh;
+          overflow-y: visible;
         }
 
         .page-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 0px;
+          margin-bottom: 0;
           background-color: rgba(255, 255, 255, 1);
           padding: 8px 16px;
           width: 100%;
-          max-width: 1180px;
+          max-width: 1200px;
           box-sizing: border-box;
+          min-height: 56px;
+          overflow: visible;
         }
 
         .header-left {
@@ -652,6 +788,8 @@ const CityManagementPage = () => {
         .page-actions {
           display: flex;
           gap: 8px;
+          align-items: center;
+          position: relative;
         }
 
         .filter-container {
@@ -686,7 +824,7 @@ const CityManagementPage = () => {
         .filter-badge {
           position: absolute;
           top: -8px;
-          right: 0px;
+          right: 0;
           background-color: #ff4d4f;
           color: #fff;
           border-radius: 50%;
@@ -736,16 +874,17 @@ const CityManagementPage = () => {
 
         .filter-dropdown {
           position: absolute;
-          top: 40px;
+          top: 100%;
           left: 0;
           background-color: #fff;
           border: 1px solid #e2e8f0;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
           padding: 16px;
-          padding-right: 35px;
           width: 250px;
-          z-index: 1000;
+          max-height: 400px;
+          overflow-y: auto;
+          z-index: 10000002;
         }
 
         .filter-header {
@@ -809,18 +948,24 @@ const CityManagementPage = () => {
         .table-section {
           width: 100%;
           max-width: 1210px;
+          position: relative;
+          z-index: 10;
         }
 
         .table-wrapper {
           width: 100%;
-          max-width: 1210px;
+          max-width: 1200px;
           height: 644px;
           overflow-x: auto;
           overflow-y: auto;
+          position: relative;
+          z-index: 10;
         }
 
         .table-inner {
           min-width: 1320px;
+          position: relative;
+          z-index: 10;
         }
 
         .table-container {
@@ -831,6 +976,7 @@ const CityManagementPage = () => {
           position: relative;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
+          z-index: 10;
         }
 
         .table-container th,
@@ -850,7 +996,7 @@ const CityManagementPage = () => {
           background-color: #f8f9fa;
           position: sticky;
           top: 0;
-          z-index: 10;
+          z-index: 15;
         }
 
         .table-container th {
@@ -874,7 +1020,7 @@ const CityManagementPage = () => {
           position: sticky;
           top: 0;
           left: 0;
-          z-index: 30;
+          z-index: 25;
           background-color: #f8f9fa;
         }
 
@@ -951,7 +1097,7 @@ const CityManagementPage = () => {
         }
 
         .pagination {
-          display: flex;
+          display: none;
           align-items: center;
           position: fixed;
           bottom: 0;
@@ -1011,7 +1157,7 @@ const CityManagementPage = () => {
 
         .previous {
           position: absolute;
-          left: 20px;
+          left: 280px;
           font-size: 14px;
           background: rgba(255, 255, 255, 1);
           border: 1px solid rgba(208, 213, 221, 1);
@@ -1028,14 +1174,14 @@ const CityManagementPage = () => {
         .city-form-container {
           position: fixed;
           top: 180px;
-          left: 50%;
+          left: 60%;
           transform: translateX(-50%);
           width: 480px;
           height: 416px;
           background: rgba(255, 255, 255, 1);
           border-radius: 12px;
           padding: 24px;
-          box-shadow: 0px 4px 12px para(0, 0, 0, 0.1);
+          box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
           overflow-y: auto;
           box-sizing: border-box;
           z-index: 1000;
@@ -1075,7 +1221,8 @@ const CityManagementPage = () => {
           flex-direction: column;
         }
 
-        .form-group.small-input input {
+        .form-group.small-input input,
+        .form-group.small-input select {
           width: 94px;
           height: 40px;
           padding: 8px;
@@ -1183,7 +1330,7 @@ const CityManagementPage = () => {
 
         @media (max-width: 1440px) {
           .table-wrapper {
-            max-width: 100%;
+            max-width: 97%;
           }
           .table-inner {
             min-width: 100%;
@@ -1193,26 +1340,32 @@ const CityManagementPage = () => {
         @media (max-width: 1024px) {
           .page-header {
             width: 100%;
-            max-width: 770px;
+            max-width: 810px;
           }
           .table-wrapper {
-            max-width: 830px;
+            max-width: 790px;
           }
           .table-inner {
             min-width: 1320px;
+          }
+          .previous {
+            left: 200px;
           }
         }
 
         @media (max-width: 768px) {
           .page-header {
             width: 100%;
-            max-width: 500px;
+            max-width: 570px;
           }
           .table-wrapper {
-            max-width: 550px;
+            max-width: 570px;
           }
           .table-inner {
             min-width: 1320px;
+          }
+          .pagination {
+            display: none;
           }
         }
 
@@ -1223,9 +1376,11 @@ const CityManagementPage = () => {
             margin-left: 0;
             flex-wrap: wrap;
             gap: 12px;
-            background-image: url(${bgImage});
+            background: #FFFFFF;
             flex-direction: column;
             align-items: flex-start;
+            min-height: 120px;
+            overflow: visible;
           }
 
           .header-left {
@@ -1290,7 +1445,7 @@ const CityManagementPage = () => {
             background-color: #f8f9fa;
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 15;
           }
 
           .table-wrapper {
@@ -1310,10 +1465,121 @@ const CityManagementPage = () => {
             top: 100px;
           }
 
+          .filter-dropdown {
+            width: 90%;
+            left: 0;
+            top: 100%;
+            max-height: 300px;
+            padding: 12px;
+            z-index: 10000002;
+          }
+
           .pagination {
             left: 0;
             width: 100%;
             transform: translateY(0);
+          }
+
+          .form-row {
+            flex-direction: column;
+            gap: 12px;
+          }
+
+          .form-group.small-input {
+            flex: 0 0 100%;
+            max-width: 100%;
+          }
+
+          .form-group.small-input input {
+            width: 100%;
+          }
+
+          .form-group.large-input {
+            flex: 0 0 100%;
+            max-width: 100%;
+          }
+
+          .form-group.large-input input {
+            width: 100%;
+          }
+
+          .form-row:nth-child(1) {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 12px;
+          }
+
+          .form-row:nth-child(1) .form-group.small-input {
+            flex: 0 0 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+          }
+
+          .form-row:nth-child(1) .form-group.large-input {
+            flex: 0 0 100%;
+            max-width: 100%;
+          }
+
+          .form-row:nth-child(2) {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 12px;
+          }
+
+          .form-row:nth-child(2) .form-group.small-input {
+            flex: 0 0 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+          }
+
+          .form-row:nth-child(2) .form-group.large-input {
+            flex: 0 0 100%;
+            max-width: 100%;
+          }
+
+          .form-row:nth-child(3) {
+            flex-direction: row;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+
+          .form-row:nth-child(3) .form-group.large-input {
+            flex: 0 0 100%;
+            max-width: 100%;
+            gap: 12px;
+          }
+
+          .form-row:nth-child(3) .form-group.small-input {
+            flex: 0 0 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+             
+          }
+
+          .form-row:nth-child(3) .form-group.small-input:nth-child(2),
+          .form-row:nth-child(3) .form-group.small-input:nth-child(3) {
+            display: inline-block;
+            vertical-align: top;
+            flex-direction: row;
+          }
+
+          .form-row:nth-child(3)::after {
+            content: '';
+            display: block;
+            
+            clear: both;
+            gap: 10px;
+          }
+
+          .form-actions {
+            flex-direction: row;
+            align-items: flex-end;
+            gap: 12px;
+          }
+
+          .cancel-button,
+          .submit-button,
+          .delete-button,
+          .edit-button {
+            width: 50%;
+            max-width: 50%;
           }
         }
 

@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Warehouse, MessageSquareMore, BookOpen, Package, Cctv, ChevronUp, ChevronDown 
@@ -11,18 +10,14 @@ import ApplicationIcon from '../Images/Application.png';
 import FleetIcon from '../Images/Fleet.png';
 import PaymentServicesImg from '../Images/PaymentServices.png';
 import EmployeeImg from '../Images/Employee.png';
-import { useFormContext } from './FormContext';
+import { useFormContext } from '../components/FormContext';
 import { NavLink } from 'react-router-dom';
-import { useRef } from 'react';
 
-// Sidebar Component
-const Sidebar = ({ tableScrollTop }) => {
+const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
   const touchStartY = useRef(null);
   const sidebarRef = useRef(null);
-  const lastScrollY = useRef(0);
-  const { isFormOpen, isCityTableVisible } = useFormContext();
+  const { isFormOpen, isCityTableVisible, isSidebarVisible, setSidebarVisible } = useFormContext();
 
   const menuItems = [
     {
@@ -60,7 +55,7 @@ const Sidebar = ({ tableScrollTop }) => {
 
   const handleTouchStart = (e) => {
     touchStartY.current = e.touches[0].clientY;
-    console.log('Touch start:', touchStartY.current);
+    console.log('Sidebar - Touch start:', touchStartY.current);
   };
 
   const handleTouchMove = (e) => {
@@ -68,44 +63,27 @@ const Sidebar = ({ tableScrollTop }) => {
     e.preventDefault();
     const touchCurrentY = e.touches[0].clientY;
     const deltaY = touchStartY.current - touchCurrentY;
-    console.log('Touch move, deltaY:', deltaY);
+    console.log('Sidebar - Touch move, deltaY:', deltaY);
 
     if (deltaY > 30 && !isExpanded) {
       setIsExpanded(true);
-      console.log('Expanded: true');
+      console.log('Sidebar - Expanded: true');
     } else if (deltaY < -30 && isExpanded) {
       setIsExpanded(false);
-      console.log('Expanded: false');
+      console.log('Sidebar - Expanded: false');
     }
   };
 
   const handleTouchEnd = () => {
     touchStartY.current = null;
-    console.log('Touch end');
+    console.log('Sidebar - Touch end');
   };
 
- useEffect(() => {
-    if (window.innerWidth <= 480 && isCityTableVisible && !isFormOpen) {
-      const currentScrollY = tableScrollTop || 0;
-      const scrollingUp = currentScrollY > lastScrollY.current;
-      const atTop = currentScrollY === 0;
+  useEffect(() => {
+    console.log('Sidebar - useEffect triggered');
+    console.log('Sidebar - isCityTableVisible:', isCityTableVisible, 'isFormOpen:', isFormOpen, 'isSidebarVisible:', isSidebarVisible);
+  }, [isCityTableVisible, isFormOpen, isSidebarVisible]);
 
-      console.log('Sidebar - Table Scroll:', currentScrollY, 'Scrolling Up:', scrollingUp, 'At Top:', atTop, 'isVisible:', isVisible);
-
-      if (atTop) {
-        setIsVisible(true);
-      } else if (scrollingUp) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-
-      lastScrollY.current = currentScrollY;
-    } else {
-      setIsVisible(true);
-    }
-  }, [tableScrollTop, isCityTableVisible, isFormOpen]);
-  
   return (
     <>
       <style>{`
@@ -119,7 +97,9 @@ const Sidebar = ({ tableScrollTop }) => {
           left: 0;
           top: 59px;
           z-index: 1000;
-          transition: transform 0.3s ease-in-out, height 0.3s ease-in-out;
+          transition: transform 0.3s ease-in-out, height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+          opacity: ${isSidebarVisible ? 1 : 0};
+          pointer-events: ${isSidebarVisible ? 'auto' : 'none'};
         }
 
         .sidebar-title {
@@ -220,17 +200,17 @@ const Sidebar = ({ tableScrollTop }) => {
             box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
             padding: 5px;
             transform: ${
-              isFormOpen
-                ? 'translateY(100%)'
-                : !isVisible
+              isFormOpen || !isSidebarVisible
                 ? 'translateY(100%)'
                 : isExpanded
                 ? 'translateY(0)'
                 : 'translateY(calc(100% - 80px))'
             };
             z-index: 1001;
-            transition: transform 0.3s ease-in-out, height 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, height 0.3s ease-in-out, opacity 0.3s ease-in-out;
             background: #FFFFFF;
+            opacity: ${isSidebarVisible ? 1 : 0};
+            pointer-events: ${isSidebarVisible ? 'auto' : 'none'};
           }
 
           .sidebar-title {
@@ -371,17 +351,62 @@ const Sidebar = ({ tableScrollTop }) => {
   );
 };
 
-// Layout Component
 const Layout = ({ children }) => {
-  const { isFormOpen, setIsCityTableVisible } = useFormContext();
+  const { isFormOpen, setIsCityTableVisible, setSidebarVisible } = useFormContext();
   const location = useLocation();
-  const [tableScrollTop, setTableScrollTop] = useState(0);
+  const layoutRef = useRef(null);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
-    setIsCityTableVisible(location.pathname === '/students/city');
+    setIsCityTableVisible(location.pathname.startsWith('/students'));
+    console.log('Layout - Route changed:', location.pathname);
   }, [location.pathname, setIsCityTableVisible]);
 
-  console.log('Layout - tableScrollTop:', tableScrollTop);
+  useEffect(() => {
+    let timeout;
+    const handleLayoutScroll = () => {
+      if (layoutRef.current) {
+        const currentScrollY = layoutRef.current.scrollTop;
+        console.log('Layout - Scroll detected, scrollTop:', currentScrollY, 'Screen width:', window.innerWidth);
+
+        if (window.innerWidth <= 480) {
+          const scrollingUp = currentScrollY < lastScrollY.current;
+          const atTop = currentScrollY === 0;
+
+          console.log('Layout - Scrolling Up:', scrollingUp, 'At Top:', atTop);
+
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            if (atTop) {
+              setSidebarVisible(true);
+              console.log('Layout - At top, showing sidebar');
+            } else if (scrollingUp) {
+              setSidebarVisible(true);
+              console.log('Layout - Scrolling up, showing sidebar');
+            } else {
+              setSidebarVisible(false);
+              console.log('Layout - Scrolling down, hiding sidebar');
+            }
+            lastScrollY.current = currentScrollY;
+          }, 50);
+        }
+      }
+    };
+
+    const layoutElement = layoutRef.current;
+    if (layoutElement) {
+      console.log('Layout - Attaching scroll event listener');
+      layoutElement.addEventListener('scroll', handleLayoutScroll);
+    }
+
+    return () => {
+      if (layoutElement) {
+        console.log('Layout - Cleaning up scroll event listener');
+        layoutElement.removeEventListener('scroll', handleLayoutScroll);
+      }
+      clearTimeout(timeout);
+    };
+  }, [setSidebarVisible]);
 
   return (
     <>
@@ -391,7 +416,7 @@ const Layout = ({ children }) => {
           padding: 0;
           height: 100%;
           overflow-x: hidden;
-          overflow-y: hidden;
+          overflow-y: auto;
         }
         .layout {
           display: flex;
@@ -405,6 +430,7 @@ const Layout = ({ children }) => {
           width: 100%;
           max-width: 100%;
           box-sizing: border-box;
+          overflow-y: auto;
         }
 
         .main-content {
@@ -434,19 +460,13 @@ const Layout = ({ children }) => {
 
         @media (max-width: 768px) {
           .main-content {
-            margin-left: 155px;
+            margin-left: 185px;
             max-width: calc(100% - 155px);
           }
         }
 
         @media (max-width: 480px) {
-          html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow-x: hidden;
-            overflow-y: auto;
-          }
+      
           .main-content {
             margin-left: 0;
             width: 100%;
@@ -454,19 +474,20 @@ const Layout = ({ children }) => {
             margin-top: 60px;
             margin-bottom: 60px;
             overflow-y: auto;
+            min-height: calc(100vh - 60px);
           }
         }
       `}</style>
-      <div className="layout">
+      <div className="layout" ref={layoutRef}>
         <Header />
+        
         <div className="main-content">
-          <Sidebar tableScrollTop={tableScrollTop} />
-          {React.cloneElement(children, { setTableScrollTop })}
+          <Sidebar />
+          {children}
         </div>
       </div>
     </>
   );
 };
-
 
 export default Layout;
